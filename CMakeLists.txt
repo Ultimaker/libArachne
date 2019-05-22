@@ -44,6 +44,11 @@ include_directories( ${Boost_INCLUDE_DIR} )
 target_link_libraries( arachne LINK_PUBLIC ${Boost_LIBRARIES} )
 
 
+find_package(Polyclipping REQUIRED)
+include_directories(${Polyclipping_INCLUDE_DIRS} ${CMAKE_BINARY_DIR} ${RAPIDJSON_INCLUDE_DIRS})
+target_link_libraries(arachne ${Polyclipping_LIBRARIES})
+
+
 ###############################################################################
 ## testing ####################################################################
 ###############################################################################
