@@ -49,15 +49,6 @@ include_directories(${Polyclipping_INCLUDE_DIRS} ${CMAKE_BINARY_DIR} ${RAPIDJSON
 target_link_libraries(arachne ${Polyclipping_LIBRARIES})
 
 
-find_library(OVD_LIBRARY 
-            NAMES openvoronoi
-            PATHS /usr/local/lib/openvoronoi
-            DOC "openvoronoi"
-)
-MESSAGE(STATUS "OVD_LIBRARY is now: " ${OVD_LIBRARY})
-include_directories( /usr/local/include/openvoronoi )
-target_link_libraries(arachne ${OVD_LIBRARY})
-
 ###############################################################################
 ## testing ####################################################################
 ###############################################################################
