@@ -25,6 +25,7 @@ public:
         RED,
         BLUE,
         GREEN,
+        ORANGE,
         YELLOW,
         RAINBOW,
         NONE
