@@ -173,6 +173,16 @@ void SVG::writeLine(const Point& a, const Point& b, Color color, float stroke_wi
     fprintf(out, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:%s;stroke-width:%f\" />\n", fa.x, fa.y, fb.x, fb.y, toString(color).c_str(), stroke_width);
 }
 
+void SVG::writeArrow(const Point& a, const Point& b, Color color, float stroke_width, int rel_head_size_divisor, coord_t offset)
+{
+    Point ab = b - a;
+    Point nd = turn90CCW(ab) / rel_head_size_divisor / 2;
+    Point n = normal(turn90CCW(ab), offset);
+    Point d = ab / rel_head_size_divisor / 2;
+    writeLine(a + n, b + n - d, color, stroke_width);
+    writeLine(b + n - d, b + n + nd - d * 3, color, stroke_width);
+}
+
 void SVG::writeLineRGB(const Point& from, const Point& to, int r, int g, int b, float stroke_width)
 {
     FPoint3 fa = transformF(from);
