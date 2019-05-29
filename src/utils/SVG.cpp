@@ -22,6 +22,7 @@ std::string SVG::toString(Color color)
         case SVG::Color::BLUE: return "blue";
         case SVG::Color::GREEN: return "green";
         case SVG::Color::ORANGE: return "orange";
+        case SVG::Color::MAGENTA: return "magenta";
         case SVG::Color::YELLOW: return "yellow";
         case SVG::Color::NONE: return "none";
         default: return "black";
