@@ -26,6 +26,7 @@ public:
         BLUE,
         GREEN,
         ORANGE,
+        MAGENTA,
         YELLOW,
         RAINBOW,
         NONE
