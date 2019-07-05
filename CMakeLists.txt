@@ -29,6 +29,14 @@ target_compile_options(arachne PUBLIC -std=c++17 -Wall)
 # this lets me include files relative to the root src dir with a <> pair
 target_include_directories(arachne PUBLIC src)
 
+if(CMAKE_BUILD_TYPE)
+    string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_UPPER)
+endif()
+if(CMAKE_BUILD_TYPE_UPPER MATCHES "DEBUG" OR CMAKE_BUILD_TYPE_UPPER MATCHES "RELWITHDEBINFO")
+    message(STATUS "Building debug release.")
+    add_definitions(-DDEBUG)
+endif()
+
 ###############################################################################
 ## dependencies ###############################################################
 ###############################################################################
