@@ -203,6 +203,7 @@ void SVG::writeText(Point p, std::string txt, Color color, coord_t font_size)
     FPoint3 pf = transformF(p);
     fprintf(out, "<text x=\"%f\" y=\"%f\" style=\"font-size: %llipx;\" fill=\"%s\">%s</text>\n",pf.x, pf.y, font_size, toString(color).c_str(), txt.c_str());
 }
+
 void SVG::writePolygons(const Polygons& polys, Color color, float stroke_width)
 {
     for (ConstPolygonRef poly : polys)
@@ -222,6 +223,44 @@ void SVG::writePolygon(ConstPolygonRef poly, Color color, float stroke_width)
     int i = 0;
     for (Point p1 : poly)
     {
+        if (color == Color::RAINBOW)
+        {
+            int g = (i * 255 * 11 / size) % (255 * 2);
+            if (g > 255) g = 255 * 2 - g;
+            int b = (i * 255 * 5 / size) % (255 * 2);
+            if (b > 255) b = 255 * 2 - b;
+            writeLineRGB(p0, p1, i * 255 / size, g, b, stroke_width);
+        }
+        else
+        {
+            writeLine(p0, p1, color, stroke_width);
+        }
+        p0 = p1;
+        i++;
+    }
+}
+
+
+void SVG::writePolylines(const Polygons& polys, Color color, float stroke_width)
+{
+    for (ConstPolygonRef poly : polys)
+    {
+        writePolyline(poly, color, stroke_width);
+    }
+}
+
+void SVG::writePolyline(ConstPolygonRef poly, Color color, float stroke_width)
+{
+    if (poly.size() == 0)
+    {
+        return;
+    }
+    int size = poly.size();
+    Point p0 = poly[0];
+    int i = 0;
+    for (coord_t p_idx = 1; p_idx < poly.size(); p_idx++)
+    {
+        Point p1 = poly[p_idx];
         if (color == Color::RAINBOW)
         {
             int g = (i * 255 * 11 / size) % (255 * 2);

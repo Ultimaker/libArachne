@@ -117,6 +117,10 @@ public:
 
     void writePolygon(ConstPolygonRef poly, Color color = Color::BLACK, float stroke_width = 1);
 
+    void writePolylines(const Polygons& polys, Color color = Color::BLACK, float stroke_width = 1);
+
+    void writePolyline(ConstPolygonRef poly, Color color = Color::BLACK, float stroke_width = 1);
+
 };
 
 template<typename... Args>
