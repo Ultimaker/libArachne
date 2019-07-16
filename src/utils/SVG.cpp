@@ -30,20 +30,29 @@ std::string SVG::toString(Color color)
 }
 
 
+SVG::SVG(std::string filename, AABB aabb, Point canvas_size, Color background)
+: SVG(filename, aabb, std::min(double(canvas_size.X - canvas_size.X / 5 * 2) / (aabb.max.X - aabb.min.X), double(canvas_size.Y - canvas_size.Y / 5) / (aabb.max.Y - aabb.min.Y)), canvas_size, background)
+{
+}
 
-SVG::SVG(const char* filename, AABB aabb, Point canvas_size, Color background)
+SVG::SVG(std::string filename, AABB aabb, double scale, Color background)
+: SVG(filename, aabb, scale, (aabb.max - aabb.min) * scale, background)
+{
+}
+
+SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color background)
 : aabb(aabb)
 , aabb_size(aabb.max - aabb.min)
-, border(canvas_size.X / 5, canvas_size.Y / 10)
 , canvas_size(canvas_size)
-, scale(std::min(double(canvas_size.X - border.X * 2) / aabb_size.X, double(canvas_size.Y - border.Y * 2) / aabb_size.Y))
+, border(canvas_size.X / 5, canvas_size.Y / 10)
+, scale(scale)
 , background(background)
 {
-    output_is_html = strcmp(filename + strlen(filename) - 4, "html") == 0;
-    out = fopen(filename, "w");
+    output_is_html = strcmp(filename.c_str() + strlen(filename.c_str()) - 4, "html") == 0;
+    out = fopen(filename.c_str(), "w");
     if(!out)
     {
-        logError("The file %s could not be opened for writing.",filename);
+        logError("The file %s could not be opened for writing.",filename.c_str());
     }
     if (output_is_html)
     {

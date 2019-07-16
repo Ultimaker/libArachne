@@ -47,7 +47,9 @@ private:
     bool output_is_html;
 
 public:
-    SVG(const char* filename, AABB aabb, Point canvas_size = Point(1024, 1024), Color background = Color::NONE);
+    SVG(std::string filename, AABB aabb, Point canvas_size = Point(1024, 1024), Color background = Color::NONE);
+    SVG(std::string filename, AABB aabb, double scale, Color background = Color::NONE);
+    SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color background = Color::NONE);
 
     ~SVG();
 
