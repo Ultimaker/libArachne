@@ -24,7 +24,7 @@ file(GLOB_RECURSE data resources/*)
 add_executable(arachne ${sources})
 
 # just for example add some compiler flags
-target_compile_options(arachne PUBLIC -std=c++17 -Wall)
+target_compile_options(arachne PUBLIC -std=c++17 -Wall -Wno-unused-variable)
 
 # this lets me include files relative to the root src dir with a <> pair
 target_include_directories(arachne PUBLIC src)
