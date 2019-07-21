@@ -103,8 +103,10 @@ void SVG::writeComment(std::string comment)
 
 void SVG::writeAreas(const Polygons& polygons, Color color, Color outline_color, float stroke_width) 
 {
-    for (PolygonsPart& parts : polygons.splitIntoParts())
+    auto parts = polygons.splitIntoParts();
+    for (auto part_it = parts.rbegin(); part_it != parts.rend(); ++part_it)
     {
+        PolygonsPart& parts = *part_it;
         for (unsigned int j = 0; j < parts.size(); j++)
         {
             fprintf(out, "<polygon points=\"");
