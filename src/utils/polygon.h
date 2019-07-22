@@ -777,13 +777,22 @@ public:
         clipper.Execute(ClipperLib::ctIntersection, ret);
         return ret;
     }
-    Polygons xorPolygons(const Polygons& other) const
+    Polygons xorPolygons(const Polygons& other, ClipperLib::PolyFillType pft = ClipperLib::pftEvenOdd) const
     {
         Polygons ret;
         ClipperLib::Clipper clipper(clipper_init);
         clipper.AddPaths(paths, ClipperLib::ptSubject, true);
         clipper.AddPaths(other.paths, ClipperLib::ptClip, true);
-        clipper.Execute(ClipperLib::ctXor, ret.paths);
+        clipper.Execute(ClipperLib::ctXor, ret.paths, pft);
+        return ret;
+    }
+
+    Polygons execute (ClipperLib::PolyFillType pft = ClipperLib::pftEvenOdd) const
+    {
+        Polygons ret;
+        ClipperLib::Clipper clipper(clipper_init);
+        clipper.AddPaths(paths, ClipperLib::ptSubject, true);
+        clipper.Execute(ClipperLib::ctXor, ret.paths, pft);
         return ret;
     }
 
