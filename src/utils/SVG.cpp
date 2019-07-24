@@ -1,6 +1,7 @@
 //Copyright (c) 2017 Tim Kuipers
 //Copyright (c) 2018 Ultimaker B.V.
 
+#include <sstream>
 
 #include "floatpoint.h"
 #include "logoutput.h"
@@ -29,18 +30,29 @@ std::string SVG::toString(Color color)
     }
 }
 
+std::string SVG::toString(ColorObject& color)
+{
+    if (color.is_enum) return toString(color.color);
+    else
+    {
+        std::ostringstream ss;
+        ss << "rgb(" << color.r << "," << color.g << "," << color.b << ")";
+        return ss.str();
+    }
+}
 
-SVG::SVG(std::string filename, AABB aabb, Point canvas_size, Color background)
+
+SVG::SVG(std::string filename, AABB aabb, Point canvas_size, ColorObject background)
 : SVG(filename, aabb, std::min(double(canvas_size.X - canvas_size.X / 5 * 2) / (aabb.max.X - aabb.min.X), double(canvas_size.Y - canvas_size.Y / 5) / (aabb.max.Y - aabb.min.Y)), canvas_size, background)
 {
 }
 
-SVG::SVG(std::string filename, AABB aabb, double scale, Color background)
+SVG::SVG(std::string filename, AABB aabb, double scale, ColorObject background)
 : SVG(filename, aabb, scale, (aabb.max - aabb.min) * scale, background)
 {
 }
 
-SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color background)
+SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, ColorObject background)
 : aabb(aabb)
 , aabb_size(aabb.max - aabb.min)
 , canvas_size(canvas_size)
@@ -64,7 +76,7 @@ SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color
     }
     fprintf(out, "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" style=\"width:%llipx;height:%llipx\">\n", canvas_size.X, canvas_size.Y);
     
-    if(background != Color::NONE)
+    if (!background.is_enum || background.color != Color::NONE)
     {
         fprintf(out, "<rect width=\"100%%\" height=\"100%%\" fill=\"%s\"/>\n", toString(background).c_str());
     }
@@ -101,7 +113,7 @@ void SVG::writeComment(std::string comment)
     fprintf(out, "<!-- %s -->\n", comment.c_str());
 }
 
-void SVG::writeAreas(const Polygons& polygons, Color color, Color outline_color, float stroke_width) 
+void SVG::writeAreas(const Polygons& polygons, ColorObject color, ColorObject outline_color, float stroke_width) 
 {
     auto parts = polygons.splitIntoParts();
     for (auto part_it = parts.rbegin(); part_it != parts.rend(); ++part_it)
@@ -123,7 +135,7 @@ void SVG::writeAreas(const Polygons& polygons, Color color, Color outline_color,
     }
 }
 
-void SVG::writeAreas(ConstPolygonRef polygon, Color color, Color outline_color, float stroke_width)
+void SVG::writeAreas(ConstPolygonRef polygon, ColorObject color, ColorObject outline_color, float stroke_width)
 {
     fprintf(out,"<polygon fill=\"%s\" stroke=\"%s\" stroke-width=\"%f\" points=\"",toString(color).c_str(),toString(outline_color).c_str(), stroke_width); //The beginning of the polygon tag.
     for (const Point& point : polygon) //Add every point to the list of points.
@@ -134,7 +146,7 @@ void SVG::writeAreas(ConstPolygonRef polygon, Color color, Color outline_color, 
     fprintf(out,"\" />\n"); //The end of the polygon tag.
 }
 
-void SVG::writePoint(const Point& p, bool write_coords, int size, Color color)
+void SVG::writePoint(const Point& p, bool write_coords, int size, ColorObject color)
 {
     FPoint3 pf = transformF(p);
     fprintf(out, "<circle cx=\"%f\" cy=\"%f\" r=\"%d\" stroke=\"%s\" stroke-width=\"1\" fill=\"%s\" />\n",pf.x, pf.y, size, toString(color).c_str(), toString(color).c_str());
@@ -145,7 +157,7 @@ void SVG::writePoint(const Point& p, bool write_coords, int size, Color color)
     }
 }
 
-void SVG::writePoints(ConstPolygonRef poly, bool write_coords, int size, Color color)
+void SVG::writePoints(ConstPolygonRef poly, bool write_coords, int size, ColorObject color)
 {
     for (const Point& p : poly)
     {
@@ -153,7 +165,7 @@ void SVG::writePoints(ConstPolygonRef poly, bool write_coords, int size, Color c
     }
 }
 
-void SVG::writePoints(Polygons& polygons, bool write_coords, int size, Color color)
+void SVG::writePoints(Polygons& polygons, bool write_coords, int size, ColorObject color)
 {
     for (PolygonRef poly : polygons)
     {
@@ -161,7 +173,7 @@ void SVG::writePoints(Polygons& polygons, bool write_coords, int size, Color col
     }
 }
 
-void SVG::writeLines(std::vector<Point> polyline, Color color)
+void SVG::writeLines(std::vector<Point> polyline, ColorObject color)
 {
     if(polyline.size() <= 1) //Need at least 2 points.
     {
@@ -178,14 +190,14 @@ void SVG::writeLines(std::vector<Point> polyline, Color color)
     fprintf(out,"\" />\n"); //Write the end of the tag.
 }
 
-void SVG::writeLine(const Point& a, const Point& b, Color color, float stroke_width)
+void SVG::writeLine(const Point& a, const Point& b, ColorObject color, float stroke_width)
 {
     FPoint3 fa = transformF(a);
     FPoint3 fb = transformF(b);
     fprintf(out, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:%s;stroke-width:%f\" />\n", fa.x, fa.y, fb.x, fb.y, toString(color).c_str(), stroke_width);
 }
 
-void SVG::writeArrow(const Point& a, const Point& b, Color color, float stroke_width, int rel_head_size_divisor, coord_t offset)
+void SVG::writeArrow(const Point& a, const Point& b, ColorObject color, float stroke_width, int rel_head_size_divisor, coord_t offset)
 {
     Point ab = b - a;
     Point nd = turn90CCW(ab) / rel_head_size_divisor / 2;
@@ -202,20 +214,20 @@ void SVG::writeLineRGB(const Point& from, const Point& to, int r, int g, int b, 
     fprintf(out, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(%i,%i,%i);stroke-width:%f\" />\n", fa.x, fa.y, fb.x, fb.y, r, g, b, stroke_width);
 }
 
-void SVG::writeDashedLine(const Point& a, const Point& b, Color color)
+void SVG::writeDashedLine(const Point& a, const Point& b, ColorObject color)
 {
     FPoint3 fa = transformF(a);
     FPoint3 fb = transformF(b);
     fprintf(out,"<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" stroke-width=\"1\" stroke-dasharray=\"5,5\" />\n",fa.x,fa.y,fb.x,fb.y,toString(color).c_str());
 }
 
-void SVG::writeText(Point p, std::string txt, Color color, coord_t font_size)
+void SVG::writeText(Point p, std::string txt, ColorObject color, coord_t font_size)
 {
     FPoint3 pf = transformF(p);
     fprintf(out, "<text x=\"%f\" y=\"%f\" style=\"font-size: %llipx;\" fill=\"%s\">%s</text>\n",pf.x, pf.y, font_size, toString(color).c_str(), txt.c_str());
 }
 
-void SVG::writePolygons(const Polygons& polys, Color color, float stroke_width)
+void SVG::writePolygons(const Polygons& polys, ColorObject color, float stroke_width)
 {
     for (ConstPolygonRef poly : polys)
     {
@@ -223,7 +235,7 @@ void SVG::writePolygons(const Polygons& polys, Color color, float stroke_width)
     }
 }
 
-void SVG::writePolygon(ConstPolygonRef poly, Color color, float stroke_width)
+void SVG::writePolygon(ConstPolygonRef poly, ColorObject color, float stroke_width)
 {
     if (poly.size() == 0)
     {
@@ -234,7 +246,7 @@ void SVG::writePolygon(ConstPolygonRef poly, Color color, float stroke_width)
     int i = 0;
     for (Point p1 : poly)
     {
-        if (color == Color::RAINBOW)
+        if (color.color == Color::RAINBOW)
         {
             int g = (i * 255 * 11 / size) % (255 * 2);
             if (g > 255) g = 255 * 2 - g;
@@ -252,7 +264,7 @@ void SVG::writePolygon(ConstPolygonRef poly, Color color, float stroke_width)
 }
 
 
-void SVG::writePolylines(const Polygons& polys, Color color, float stroke_width)
+void SVG::writePolylines(const Polygons& polys, ColorObject color, float stroke_width)
 {
     for (ConstPolygonRef poly : polys)
     {
@@ -260,7 +272,7 @@ void SVG::writePolylines(const Polygons& polys, Color color, float stroke_width)
     }
 }
 
-void SVG::writePolyline(ConstPolygonRef poly, Color color, float stroke_width)
+void SVG::writePolyline(ConstPolygonRef poly, ColorObject color, float stroke_width)
 {
     if (poly.size() == 0)
     {
@@ -272,7 +284,7 @@ void SVG::writePolyline(ConstPolygonRef poly, Color color, float stroke_width)
     for (coord_t p_idx = 1; p_idx < poly.size(); p_idx++)
     {
         Point p1 = poly[p_idx];
-        if (color == Color::RAINBOW)
+        if (color.color == Color::RAINBOW)
         {
             int g = (i * 255 * 11 / size) % (255 * 2);
             if (g > 255) g = 255 * 2 - g;
