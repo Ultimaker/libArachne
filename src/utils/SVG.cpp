@@ -56,7 +56,6 @@ SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color
 : aabb(aabb)
 , aabb_size(aabb.max - aabb.min)
 , canvas_size(canvas_size)
-, border(canvas_size.X / 5, canvas_size.Y / 10)
 , scale(scale)
 , background(background)
 {
@@ -74,8 +73,29 @@ SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color
     {
         fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
     }
-    fprintf(out, "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" style=\"width:%llipx;height:%llipx\">\n", canvas_size.X, canvas_size.Y);
-    
+    fprintf(out, "<svg \n");
+    fprintf(out,"   xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n");
+    fprintf(out,"   xmlns:cc=\"http://creativecommons.org/ns#\"\n");
+    fprintf(out,"   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n");
+    fprintf(out,"   xmlns:svg=\"http://www.w3.org/2000/svg\"\n");
+    fprintf(out,"   xmlns=\"http://www.w3.org/2000/svg\"\n");
+    fprintf(out,"   height=\"%lli\"", canvas_size.Y);
+    fprintf(out,"   width=\"%lli\"", canvas_size.X);
+    fprintf(out,"   id=\"svg1860\"\n");
+    fprintf(out,"   version=\"1.1\">\n");
+    fprintf(out,"  <metadata\n");
+    fprintf(out,"     id=\"metadata1866\">\n");
+    fprintf(out,"    <rdf:RDF>\n");
+    fprintf(out,"      <cc:Work\n");
+    fprintf(out,"         rdf:about=\"\">\n");
+    fprintf(out,"        <dc:format>image/svg+xml</dc:format>\n");
+    fprintf(out,"        <dc:type\n");
+    fprintf(out,"           rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" />\n");
+    fprintf(out,"        <dc:title></dc:title>\n");
+    fprintf(out,"      </cc:Work>\n");
+    fprintf(out,"    </rdf:RDF>\n");
+    fprintf(out,"  </metadata>\n");
+
     if (!background.is_enum || background.color != Color::NONE)
     {
         fprintf(out, "<rect width=\"100%%\" height=\"100%%\" fill=\"%s\"/>\n", toString(background).c_str());
@@ -100,12 +120,12 @@ double SVG::getScale() const
 
 Point SVG::transform(const Point& p) 
 {
-    return Point((p.X - aabb.min.X) * scale, canvas_size.X - border.X - (p.Y - aabb.min.Y) * scale) + border;
+    return Point((p.X - aabb.min.X) * scale, (p.Y - aabb.min.Y) * scale);
 }
 
 FPoint3 SVG::transformF(const Point& p) 
 {
-    return FPoint3((p.X - aabb.min.X) * scale + border.X, canvas_size.X - border.X + border.Y - (p.Y-aabb.min.Y) * scale, 0.0);
+    return FPoint3((p.X - aabb.min.X) * scale, (p.Y-aabb.min.Y) * scale, 0.0);
 }
 
 void SVG::writeComment(std::string comment)
