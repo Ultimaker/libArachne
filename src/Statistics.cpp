@@ -185,6 +185,35 @@ void Statistics::visualize()
 
     {
         std::ostringstream ss;
+        ss << "output/" << output_prefix << "_" << test_type << "_pretty.svg";
+        SVG svg(ss.str(), aabb);
+        svg.writeAreas(*input, SVG::Color::NONE, SVG::Color::RED, 2);
+        for (PolygonRef poly : area_covered)
+        {
+            svg.writeAreas(poly, SVG::Color::BLACK, SVG::Color::NONE);
+        }
+        for (float w = .9; w > .25; w = 1.0 - (1.0 - w) * 1.2)
+        {
+            
+            Polygons polys;
+            for (coord_t segment_idx = 0; segment_idx < all_segments.size(); segment_idx++)
+            {
+                Segment s = all_segments[segment_idx];
+                s.s.from.w *= w;
+                s.s.to.w *= w;
+                Polygons covered = s.s.toPolygons(false);
+                polys.add(covered);
+            }
+            polys = polys.execute(ClipperLib::pftNonZero);
+            int c = 255 - 200 * w;
+            SVG::ColorObject clr(c, c, c);
+            svg.writeAreas(polys, clr, SVG::Color::NONE);
+        }
+//         svg.writePolygons(paths, SVG::Color::BLACK, 2);
+    }
+
+    {
+        std::ostringstream ss;
         ss << "output/" << output_prefix << "_" << test_type << "_toolpaths.svg";
         SVG svg(ss.str(), aabb);
         svg.writeAreas(*input, SVG::Color::GRAY, SVG::Color::NONE, 2);

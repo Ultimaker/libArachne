@@ -29,6 +29,14 @@ public:
     coord_t optimal_thickness(coord_t bead_count) const override;
     coord_t transition_thickness(coord_t lower_bead_count) const override;
     coord_t optimal_bead_count(coord_t thickness) const override;
+    virtual coord_t getTransitioningLength(coord_t lower_bead_count) const override
+    {
+        if (lower_bead_count == 0)
+        {
+            return 10;
+        }
+        return optimal_width / 2;
+    }
 };
 
 

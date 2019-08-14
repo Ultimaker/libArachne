@@ -578,10 +578,10 @@ void test(std::string input_outline_filename, std::string output_prefix)
     */
     
     generateTestPolys();
-    Polygons polys = SVGloader::load(input_outline_filename);
-    AABB aabb(polys);
-    polys.applyMatrix(Point3Matrix::translate(aabb.min * -1));
-
+//     Polygons polys = SVGloader::load(input_outline_filename);
+//     AABB aabb(polys);
+//     polys.applyMatrix(Point3Matrix::translate(aabb.min * -1));
+// 
 
     /*
     Polygons polys = generateTestPoly(40, Point(20000, 20000));
@@ -598,7 +598,7 @@ void test(std::string input_outline_filename, std::string output_prefix)
 //     Polygons polys = gMAT_example;
 //     Polygons polys = test_various_aspects;polys.applyMatrix(PointMatrix::scale(2.2));
 //     Polygons polys = simple_MAT_example;
-//     Polygons polys = wedge; polys.applyMatrix(PointMatrix::scale(3));
+    Polygons polys = wedge; // polys.applyMatrix(PointMatrix::scale(3));
 //     Polygons polys = double_wedge; polys.applyMatrix(PointMatrix::scale(3));
 //     Polygons polys = flawed_wedge;
 //     Polygons polys = clean_and_flawed_wedge_part;
@@ -649,7 +649,8 @@ void test(std::string input_outline_filename, std::string output_prefix)
     }
     
 //     std::vector<StrategyType> strategies({ StrategyType::Constant, StrategyType::Center, StrategyType::Distributed, StrategyType::InwardDistributed, StrategyType::SingleBead });
-    std::vector<StrategyType> strategies({ StrategyType::Constant, StrategyType::Center, StrategyType::Distributed, StrategyType::Naive });
+//     std::vector<StrategyType> strategies({ StrategyType::Constant, StrategyType::Center, StrategyType::Distributed, StrategyType::Naive });
+    std::vector<StrategyType> strategies({ StrategyType::Center });
     std::random_shuffle(strategies.begin(), strategies.end());
     for (StrategyType type : strategies )
     {
