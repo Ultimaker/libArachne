@@ -79,6 +79,7 @@ SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color
     fprintf(out,"   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n");
     fprintf(out,"   xmlns:svg=\"http://www.w3.org/2000/svg\"\n");
     fprintf(out,"   xmlns=\"http://www.w3.org/2000/svg\"\n");
+    fprintf(out,"   xmlns:inkscape=\"http://www.inkscape.org/namespaces/inkscape\"\n");
     fprintf(out,"   height=\"%lli\"", canvas_size.Y);
     fprintf(out,"   width=\"%lli\"", canvas_size.X);
     fprintf(out,"   id=\"svg1860\"\n");
@@ -96,7 +97,9 @@ SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color
     fprintf(out,"    </rdf:RDF>\n");
     fprintf(out,"  </metadata>\n");
     fprintf(out,"  <g\n");
-    fprintf(out,"    id=\"layer%zu\">\n", group_nr );
+    fprintf(out,"    inkscape:groupmode=\"layer\"\n");
+    fprintf(out,"    inkscape:label=\"layer%zu\"\n", layer_nr );
+    fprintf(out,"    id=\"layer%zu\">\n", layer_nr );
 
     if (!background.is_enum || background.color != Color::NONE)
     {
@@ -121,12 +124,14 @@ double SVG::getScale() const
     return scale;
 }
 
-void SVG::nextGroup()
+void SVG::nextLayer()
 {
     fprintf(out, "  </g>\n");
-    group_nr++;
+    layer_nr++;
     fprintf(out,"  <g\n");
-    fprintf(out,"    id=\"layer%zu\">\n", group_nr );
+    fprintf(out,"    inkscape:groupmode=\"layer\"\n");
+    fprintf(out,"    inkscape:label=\"layer%zu\"\n", layer_nr );
+    fprintf(out,"    id=\"layer%zu\">\n", layer_nr );
 }
 
 Point SVG::transform(const Point& p) 

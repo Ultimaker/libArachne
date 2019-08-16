@@ -59,7 +59,7 @@ private:
     const Point canvas_size;
     const double scale;
     ColorObject background;
-    size_t group_nr = 1;
+    size_t layer_nr = 1;
 
     bool output_is_html;
 
@@ -75,7 +75,7 @@ public:
      */
     double getScale() const;
 
-    void nextGroup();
+    void nextLayer();
 
     /*!
      * transform a point in real space to canvas space
