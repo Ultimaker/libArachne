@@ -59,6 +59,7 @@ private:
     const Point canvas_size;
     const double scale;
     ColorObject background;
+    size_t group_nr = 1;
 
     bool output_is_html;
 
@@ -73,7 +74,9 @@ public:
      * get the scaling factor applied to convert real space to canvas space
      */
     double getScale() const;
-    
+
+    void nextGroup();
+
     /*!
      * transform a point in real space to canvas space
      */

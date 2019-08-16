@@ -2593,7 +2593,9 @@ SVG::ColorObject VoronoiQuadrangulation::getColor(edge_t& edge)
 
 void VoronoiQuadrangulation::debugOutput(SVG& svg, bool draw_arrows, bool draw_dists, bool draw_bead_counts, bool draw_locations)
 {
+    svg.nextGroup();
     svg.writeAreas(polys, SVG::Color::NONE, SVG::Color::BLACK, 3);
+    svg.nextGroup();
     for (edge_t& edge : graph.edges)
     {
         Point a = edge.from->p;
@@ -2618,6 +2620,7 @@ void VoronoiQuadrangulation::debugOutput(SVG& svg, bool draw_arrows, bool draw_d
             }
         }
     }
+    svg.nextGroup();
     for (node_t& node : graph.nodes)
     {
         if (draw_arrows)
@@ -2650,6 +2653,7 @@ void VoronoiQuadrangulation::debugOutput(SVG& svg, bool draw_arrows, bool draw_d
             svg.writeText(node.p, ss.str(), SVG::Color::BLACK, 4);
         }
     }
+    svg.nextGroup();
 }
 
 void VoronoiQuadrangulation::debugOutput(SVG& svg, std::unordered_map<edge_t*, std::list<TransitionMiddle>>* edge_to_transition_mids, std::unordered_map<edge_t*, std::list<TransitionEnd>>* edge_to_transition_ends)

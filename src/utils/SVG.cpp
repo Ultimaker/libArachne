@@ -95,6 +95,8 @@ SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color
     fprintf(out,"      </cc:Work>\n");
     fprintf(out,"    </rdf:RDF>\n");
     fprintf(out,"  </metadata>\n");
+    fprintf(out,"  <g\n");
+    fprintf(out,"    id=\"layer%zu\">\n", group_nr );
 
     if (!background.is_enum || background.color != Color::NONE)
     {
@@ -105,6 +107,7 @@ SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color
 
 SVG::~SVG()
 {
+    fprintf(out, "  </g>\n");
     fprintf(out, "</svg>\n");
     if (output_is_html)
     {
@@ -116,6 +119,14 @@ SVG::~SVG()
 double SVG::getScale() const
 {
     return scale;
+}
+
+void SVG::nextGroup()
+{
+    fprintf(out, "  </g>\n");
+    group_nr++;
+    fprintf(out,"  <g\n");
+    fprintf(out,"    id=\"layer%zu\">\n", group_nr );
 }
 
 Point SVG::transform(const Point& p) 
