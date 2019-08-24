@@ -80,10 +80,12 @@ SVG::SVG(std::string filename, AABB aabb, double scale, Point canvas_size, Color
     fprintf(out,"   xmlns:svg=\"http://www.w3.org/2000/svg\"\n");
     fprintf(out,"   xmlns=\"http://www.w3.org/2000/svg\"\n");
     fprintf(out,"   xmlns:inkscape=\"http://www.inkscape.org/namespaces/inkscape\"\n");
-    fprintf(out,"   height=\"%lli\"", canvas_size.Y);
-    fprintf(out,"   width=\"%lli\"", canvas_size.X);
+    fprintf(out,"   height=\"%f\"\n", scale * (aabb.max.Y - aabb.min.Y));
+    fprintf(out,"   width=\"%f\"\n", scale * (aabb.max.X - aabb.min.X));
     fprintf(out,"   id=\"svg1860\"\n");
     fprintf(out,"   version=\"1.1\">\n");
+    fprintf(out,"   inkscape:export-xdpi=\"100\"\n");
+    fprintf(out,"   inkscape:export-ydpi=\"100\"\n");
     fprintf(out,"  <metadata\n");
     fprintf(out,"     id=\"metadata1866\">\n");
     fprintf(out,"    <rdf:RDF>\n");
