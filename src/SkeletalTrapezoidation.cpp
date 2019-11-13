@@ -1888,7 +1888,7 @@ void SkeletalTrapezoidation::generateSegments(std::vector<std::list<ExtrusionLin
                 Beading high_count_beading = beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count + 1);
                 Beading merged = interpolate(low_count_beading, 1.0 - node.data.transition_ratio, high_count_beading);
                 node_to_beading.emplace(&node, merged);
-
+                assert(merged.total_thickness == node.data.distance_to_boundary * 2);
             }
         }
     }
@@ -2006,6 +2006,13 @@ void SkeletalTrapezoidation::propagateBeadingsDownward(edge_t* edge_to_peak, std
         propagated_beading.dist_from_top_source += length;
         auto pair = node_to_beading.emplace(edge_to_peak->from, propagated_beading);
         assert(pair.second && "we emplaced something");
+#ifdef DEBUG
+    {
+        auto it = node_to_beading.find(edge_to_peak->from);
+        assert(it != node_to_beading.end());
+        assert(it->second.beading.total_thickness >= edge_to_peak->to->data.distance_to_boundary * 2);
+    }
+#endif
     }
     else // if (!it->second.is_finished)
     {
@@ -2023,6 +2030,13 @@ void SkeletalTrapezoidation::propagateBeadingsDownward(edge_t* edge_to_peak, std
             Beading merged_beading = interpolate(top_beading.beading, ratio_of_top, bottom_beading.beading, edge_to_peak->from->data.distance_to_boundary);
             bottom_beading = BeadingPropagation(merged_beading);
         }
+#ifdef DEBUG
+    {
+        auto it = node_to_beading.find(edge_to_peak->from);
+        assert(it != node_to_beading.end());
+        assert(it->second.beading.total_thickness >= edge_to_peak->to->data.distance_to_boundary * 2);
+    }
+#endif
     }
 }
 
@@ -2104,6 +2118,8 @@ void SkeletalTrapezoidation::generateJunctions(std::unordered_map<node_t*, Beadi
         { // no beads to generate
             continue;
         }
+
+        assert(beading->total_thickness >= edge->to->data.distance_to_boundary * 2);
 
         Point a = edge->to->p;
         Point b = edge->from->p;
