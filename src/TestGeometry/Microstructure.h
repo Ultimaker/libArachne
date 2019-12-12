@@ -83,8 +83,8 @@ private:
         Point diff = p - Point(5000, 2000);
         diff.X = diff.X / 2 + diff.Y / 4;
         diff = diff / 2;
-        float d = INT2MM(vSize(diff) / 3) / 4;
-        return std::max(350.0, 2020 * 1.0 / (1.0 + d * d));
+        float d = vSizeMM(diff) / 9;
+        return std::max(300.0, 3000 * 1.0 / (1.0 + d * d));
     }
 };
 
