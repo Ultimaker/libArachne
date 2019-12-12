@@ -266,9 +266,9 @@ void test(std::string input_outline_filename, std::string output_prefix)
     
     TestPolys::generateTestPolys();
 
-    Polygons polys = SVGloader::load(input_outline_filename);
-    AABB aabb(polys);
-    polys.applyMatrix(Point3Matrix::translate(aabb.min * -1));
+//     Polygons polys = SVGloader::load(input_outline_filename);
+//     AABB aabb(polys);
+//     polys.applyMatrix(Point3Matrix::translate(aabb.min * -1));
     
     /*
     AABB aabb(Point(0,0), Point(1000,1000));
@@ -335,7 +335,7 @@ void test(std::string input_outline_filename, std::string output_prefix)
 //     Polygons polys = TestPolys::enclosed_region;
 //     Polygons polys = TestPolys::jin;
 //     Microstructure m; Polygons polys = TestPolys::m.squareGrid(Point(2,2), Point(2000,2000));
-//     Microstructure m; Polygons polys = TestPolys::m.hexGrid(Point(12,12), 8000); polys.applyMatrix(PointMatrix::scale(0.5));
+    Microstructure m; Polygons polys = m.hexGrid(Point(7,8), 6000); polys.applyMatrix(PointMatrix::scale(0.5));
 //     Polygons polys = MoessenTests::generateCircles(Point(3, 3), 100, 400, 500, 52);
 //     Polygons polys = MoessenTests::generateCircles(Point(2, 2), 100, 400, 500, 8);
 //     srand(1563874501); Polygons polys = MoessenTests::generateCircles(Point(3, 3), 100, 400, 1000, 8);
@@ -364,6 +364,7 @@ void test(std::string input_outline_filename, std::string output_prefix)
         svg.writeAreas(polys, SVG::Color::NONE, SVG::Color::BLACK);
     }
 #endif
+std::exit(0);
 
     coord_t nozzle_size = MM2INT(0.6);
     polys.applyMatrix(PointMatrix::scale(INT2MM(nozzle_size) / 0.4));
