@@ -1841,7 +1841,8 @@ void SkeletalTrapezoidation::generateSegments(std::vector<std::list<ExtrusionLin
             }
             if (node.data.transition_ratio == 0)
             {
-                node_to_beading.emplace(&node, beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count));
+                auto pair = node_to_beading.emplace(&node, beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count));
+                assert(pair.first->second.beading.total_thickness == node.data.distance_to_boundary * 2);
             }
             else
             {
@@ -1928,7 +1929,8 @@ void SkeletalTrapezoidation::propagateBeadingsUpward(std::vector<edge_t*>& upwar
         coord_t length = vSize(upward_edge->to->p - upward_edge->from->p);
         BeadingPropagation upper_beading = lower_beading;
         upper_beading.dist_to_bottom_source += length;
-        node_to_beading.emplace(upward_edge->to, upper_beading);
+        auto pair = node_to_beading.emplace(upward_edge->to, upper_beading);
+        assert(upper_beading.beading.total_thickness <= upward_edge->to->data.distance_to_boundary * 2);
     }
 }
 
@@ -1958,6 +1960,7 @@ void SkeletalTrapezoidation::propagateBeadingsDownward(edge_t* edge_to_peak, std
 {
     coord_t length = vSize(edge_to_peak->to->p - edge_to_peak->from->p);
     BeadingPropagation& top_beading = getBeading(edge_to_peak->to, node_to_beading, beading_strategy);
+    assert(top_beading.beading.total_thickness >= edge_to_peak->to->data.distance_to_boundary * 2);
     top_beading.is_finished = true;
     
     auto it = node_to_beading.find(edge_to_peak->from);
@@ -1966,6 +1969,7 @@ void SkeletalTrapezoidation::propagateBeadingsDownward(edge_t* edge_to_peak, std
         BeadingPropagation propagated_beading = top_beading;
         propagated_beading.dist_from_top_source += length;
         auto pair = node_to_beading.emplace(edge_to_peak->from, propagated_beading);
+        assert(propagated_beading.beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
         assert(pair.second && "we emplaced something");
 #ifdef DEBUG
     {
@@ -1990,12 +1994,13 @@ void SkeletalTrapezoidation::propagateBeadingsDownward(edge_t* edge_to_peak, std
         {
             Beading merged_beading = interpolate(top_beading.beading, ratio_of_top, bottom_beading.beading, edge_to_peak->from->data.distance_to_boundary);
             bottom_beading = BeadingPropagation(merged_beading);
+            assert(merged_beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
         }
 #ifdef DEBUG
     {
         auto it = node_to_beading.find(edge_to_peak->from);
         assert(it != node_to_beading.end());
-        assert(it->second.beading.total_thickness >= edge_to_peak->to->data.distance_to_boundary * 2);
+        assert(it->second.beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
     }
 #endif
     }
@@ -2166,6 +2171,7 @@ SkeletalTrapezoidation::BeadingPropagation& SkeletalTrapezoidation::getBeading(n
         assert(node->data.bead_count != -1);
         beading_it = node_to_beading.emplace(node, beading_strategy.compute(node->data.distance_to_boundary * 2, node->data.bead_count)).first;
     }
+    assert(beading_it != node_to_beading.end());
     return beading_it->second;
 }
 
