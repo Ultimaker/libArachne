@@ -1,8 +1,8 @@
 //Copyright (c) 2019 Ultimaker B.V.
 
 
-#ifndef BEADING_ORDER_OPTIMIZER_H
-#define BEADING_ORDER_OPTIMIZER_H
+#ifndef ARACHNE_EXTRUSION_LINE_CONNECTOR_H
+#define ARACHNE_EXTRUSION_LINE_CONNECTOR_H
 
 #include "utils/polygon.h"
 #include "utils/ExtrusionSegment.h"
@@ -13,12 +13,15 @@ namespace arachne
 {
 
 /*!
- * Connecting ExtrusionSegments together into chains / polygons
+ * Connecting ExtrusionLines together into chains / polygons.
+ * 
+ * If 3 (or more) ExtrusionLines end in the same location,
+ * two of the mwill be connected together and the third one will get a bit of its end choppped off.
  * 
  * TODO: there's a bug which connects thw wrong end of a short segment because our algorithm is gready
  * When adding a segment we should explicitly check whether it would be better to connect the segment the other way around.
  */
-class BeadingOrderOptimizer
+class ExtrusionLineConnector
 {
 public:
     /*!
@@ -29,7 +32,7 @@ public:
      */
     static void optimize(std::vector<std::list<ExtrusionLine>>& polygons_per_index, std::vector<std::list<ExtrusionLine>>& polylines_per_index, bool reduce_overlapping_segments = true, bool connect_odd_lines_to_polygons = true);
 private:
-    BeadingOrderOptimizer(std::vector<std::list<ExtrusionLine>>& polylines_per_index);
+    ExtrusionLineConnector (std::vector<std::list<ExtrusionLine>>& polylines_per_index);
 
     struct ExtrusionLineEndRef
     {
@@ -86,4 +89,4 @@ private:
 
 
 } // namespace arachne
-#endif // BEADING_ORDER_OPTIMIZER_H
+#endif // ARACHNE_EXTRUSION_LINE_CONNECTOR_H

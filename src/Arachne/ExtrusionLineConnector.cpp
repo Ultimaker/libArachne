@@ -1,7 +1,7 @@
 //Copyright (c) 2019 Ultimaker B.V.
 
 
-#include "BeadingOrderOptimizer.h"
+#include "ExtrusionLineConnector.h"
 
 #include <iterator>
 #include <unordered_map>
@@ -13,13 +13,13 @@
 namespace arachne
 {
 
-void BeadingOrderOptimizer::optimize(std::vector<std::list<ExtrusionLine>>& polygons_per_index, std::vector<std::list<ExtrusionLine>>& polylines_per_index, bool reduce_overlapping_segments, bool connect_odd_lines_to_polygons)
+void ExtrusionLineConnector::optimize(std::vector<std::list<ExtrusionLine>>& polygons_per_index, std::vector<std::list<ExtrusionLine>>& polylines_per_index, bool reduce_overlapping_segments, bool connect_odd_lines_to_polygons)
 {
-    BeadingOrderOptimizer optimizer(polylines_per_index);
+    ExtrusionLineConnector optimizer(polylines_per_index);
     optimizer.fuzzyConnect(polygons_per_index, snap_dist, reduce_overlapping_segments, connect_odd_lines_to_polygons);
 }
 
-BeadingOrderOptimizer::BeadingOrderOptimizer(std::vector<std::list<ExtrusionLine>>& polylines_per_index)
+ExtrusionLineConnector::ExtrusionLineConnector(std::vector<std::list<ExtrusionLine>>& polylines_per_index)
 : polylines_per_index(polylines_per_index)
 {
     for (auto& polylines : polylines_per_index)
@@ -36,7 +36,7 @@ BeadingOrderOptimizer::BeadingOrderOptimizer(std::vector<std::list<ExtrusionLine
 }
 
 
-void BeadingOrderOptimizer::fuzzyConnect(std::vector<std::list<ExtrusionLine>>& polygons_per_index, coord_t snap_dist, bool reduce_overlapping_segments, bool connect_odd_lines_to_polygons)
+void ExtrusionLineConnector::fuzzyConnect(std::vector<std::list<ExtrusionLine>>& polygons_per_index, coord_t snap_dist, bool reduce_overlapping_segments, bool connect_odd_lines_to_polygons)
 {
     struct Locator
     {
@@ -231,7 +231,7 @@ void BeadingOrderOptimizer::fuzzyConnect(std::vector<std::list<ExtrusionLine>>& 
 }
 
 template<typename directional_iterator>
-void BeadingOrderOptimizer::reduceIntersectionOverlap(ExtrusionLine& polyline, directional_iterator polyline_it, coord_t traveled_dist, coord_t reduction_length, ExtrusionLineEndRef& reduction_source)
+void ExtrusionLineConnector::reduceIntersectionOverlap(ExtrusionLine& polyline, directional_iterator polyline_it, coord_t traveled_dist, coord_t reduction_length, ExtrusionLineEndRef& reduction_source)
 {
     ExtrusionJunction& start_junction = *polyline_it;
     directional_iterator next_junction_it = polyline_it; next_junction_it++;
@@ -278,44 +278,44 @@ void BeadingOrderOptimizer::reduceIntersectionOverlap(ExtrusionLine& polyline, d
 
 
 template<>
-bool BeadingOrderOptimizer::isEnd(std::list<ExtrusionJunction>::iterator it, ExtrusionLine& polyline)
+bool ExtrusionLineConnector::isEnd(std::list<ExtrusionJunction>::iterator it, ExtrusionLine& polyline)
 {
     return it == polyline.junctions.end();
 }
 
 template<>
-bool BeadingOrderOptimizer::isEnd(std::list<ExtrusionJunction>::reverse_iterator it, ExtrusionLine& polyline)
+bool ExtrusionLineConnector::isEnd(std::list<ExtrusionJunction>::reverse_iterator it, ExtrusionLine& polyline)
 {
     return it == polyline.junctions.rend();
 }
 
 template<>
-std::list<ExtrusionJunction>::iterator BeadingOrderOptimizer::getInsertPosIt(std::list<ExtrusionJunction>::iterator it)
+std::list<ExtrusionJunction>::iterator ExtrusionLineConnector::getInsertPosIt(std::list<ExtrusionJunction>::iterator it)
 {
     return it;
 }
 
 template<>
-std::list<ExtrusionJunction>::iterator BeadingOrderOptimizer::getInsertPosIt(std::list<ExtrusionJunction>::reverse_iterator it)
+std::list<ExtrusionJunction>::iterator ExtrusionLineConnector::getInsertPosIt(std::list<ExtrusionJunction>::reverse_iterator it)
 {
     return it.base();
 }
 
 template<>
-std::list<ExtrusionJunction>::iterator BeadingOrderOptimizer::getSelfPosIt(std::list<ExtrusionJunction>::iterator it)
+std::list<ExtrusionJunction>::iterator ExtrusionLineConnector::getSelfPosIt(std::list<ExtrusionJunction>::iterator it)
 {
     return it;
 }
 
 template<>
-std::list<ExtrusionJunction>::iterator BeadingOrderOptimizer::getSelfPosIt(std::list<ExtrusionJunction>::reverse_iterator it)
+std::list<ExtrusionJunction>::iterator ExtrusionLineConnector::getSelfPosIt(std::list<ExtrusionJunction>::reverse_iterator it)
 {
     return (++it).base();
 }
 
 
 
-void BeadingOrderOptimizer::debugCheck()
+void ExtrusionLineConnector::debugCheck()
 {
 #ifdef DEBUG
     for (auto& polylines : polylines_per_index)

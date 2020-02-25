@@ -27,7 +27,7 @@
 
 #include "utils/VoronoiUtils.h"
 #include "Arachne/BeadingStrategies/NaiveBeadingStrategy.h"
-#include "Arachne/BeadingOrderOptimizer.h"
+#include "Arachne/ExtrusionLineConnector.h"
 #include "GcodeWriter.h"
 #include "ToolpathWriter.h"
 #include "Statistics.h"
@@ -208,7 +208,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
     }
 
     std::vector<std::list<ExtrusionLine>> result_polygons_per_index;
-    BeadingOrderOptimizer::optimize(result_polygons_per_index, result_polylines_per_index, reduce_overlapping_segments_now, connect_odd_lines_to_polygons);
+    ExtrusionLineConnector::optimize(result_polygons_per_index, result_polylines_per_index, reduce_overlapping_segments_now, connect_odd_lines_to_polygons);
     double processing_time = tk.restart();
     logAlways("Processing took %fs\n", processing_time);
 
