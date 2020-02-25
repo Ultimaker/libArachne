@@ -1,8 +1,8 @@
 //Copyright (c) 2019 Ultimaker B.V.
 
 
-#ifndef LIMITED_BEADING_STRATEGY_H
-#define LIMITED_BEADING_STRATEGY_H
+#ifndef ARACHNE_BEADING_STRATEGIES_LIMITED_BEADING_STRATEGY_H
+#define ARACHNE_BEADING_STRATEGIES_LIMITED_BEADING_STRATEGY_H
 
 #include "BeadingStrategy.h"
 #include "utils/logoutput.h"

@@ -1,8 +1,8 @@
 //Copyright (c) 2019 Ultimaker B.V.
 
 
-#ifndef BEADING_STRATEGY_H
-#define BEADING_STRATEGY_H
+#ifndef ARACHNE_BEADING_STRATEGIES_BEADING_STRATEGY_H
+#define ARACHNE_BEADING_STRATEGIES_BEADING_STRATEGY_H
 
 #include <utility>
 
@@ -127,4 +127,4 @@ public:
 
 
 } // namespace arachne
-#endif // BEADING_STRATEGY_H
+#endif // ARACHNE_BEADING_STRATEGIES_BEADING_STRATEGY_H

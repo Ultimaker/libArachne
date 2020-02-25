@@ -1,6 +1,6 @@
 //Copyright (c) 2020 Ultimaker B.V.
-#ifndef BOOST_INTERFACE_HPP
-#define BOOST_INTERFACE_HPP
+#ifndef ARACHNE_BOOST_INTERFACE_HPP
+#define ARACHNE_BOOST_INTERFACE_HPP
 
 #include <boost/polygon/voronoi.hpp>
 #include <boost/polygon/polygon.hpp>
@@ -89,4 +89,4 @@ static Polygons toPolygons(const CPolygonSet& boost_polys)
 
 } // namespace arachne
 
-#endif // BOOST_INTERFACE_HPP
+#endif // ARACHNE_BOOST_INTERFACE_HPP

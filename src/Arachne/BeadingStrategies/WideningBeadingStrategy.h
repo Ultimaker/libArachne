@@ -1,8 +1,8 @@
 //Copyright (c) 2019 Ultimaker B.V.
 
 
-#ifndef WIDENING_BEADING_STRATEGY_H
-#define WIDENING_BEADING_STRATEGY_H
+#ifndef ARACHNE_BEADING_STRATEGIES_WIDENING_BEADING_STRATEGY_H
+#define ARACHNE_BEADING_STRATEGIES_WIDENING_BEADING_STRATEGY_H
 
 #include "BeadingStrategy.h"
 
@@ -42,8 +42,5 @@ public:
     virtual std::string toString() const override { return std::string("Widening+") + parent->toString();}
 };
 
-
-
-
 } // namespace arachne
-#endif // WIDENING_BEADING_STRATEGY_H
+#endif // ARACHNE_BEADING_STRATEGIES_WIDENING_BEADING_STRATEGY_H
