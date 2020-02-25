@@ -9,7 +9,7 @@
 #include "utils/ExtrusionSegment.h"
 #include "utils/ExtrusionLine.h"
 #include "settings/types/Duration.h"
-#include "SkeletalTrapezoidation.h"
+#include "Arachne/SkeletalTrapezoidation.h"
 
 namespace arachne
 {

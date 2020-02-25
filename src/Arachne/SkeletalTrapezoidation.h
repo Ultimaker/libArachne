@@ -16,7 +16,7 @@
 #include "utils/ExtrusionLine.h"
 #include "SkeletalTrapezoidationEdge.h"
 #include "SkeletalTrapezoidationJoint.h"
-#include "BeadingStrategy.h"
+#include "BeadingStrategies/BeadingStrategy.h"
 
 #include "utils/STLwriter.h"
 

@@ -10,7 +10,7 @@
 
 #include <tclap/CmdLine.h> // command line argument parser
 
-#include "BoostInterface.hpp"
+#include "Arachne/BoostInterface.hpp"
 
 #include <unordered_set>
 #include <unordered_map>
@@ -21,13 +21,13 @@
 #include "utils/SVG.h"
 #include "utils/ToolpathVisualizer.h"
 
-#include "SkeletalTrapezoidation.h"
+#include "Arachne/SkeletalTrapezoidation.h"
 
-#include "BeadingStrategyHelper.h"
+#include "Arachne/BeadingStrategies/BeadingStrategyHelper.h"
 
 #include "utils/VoronoiUtils.h"
-#include "NaiveBeadingStrategy.h"
-#include "BeadingOrderOptimizer.h"
+#include "Arachne/BeadingStrategies/NaiveBeadingStrategy.h"
+#include "Arachne/BeadingOrderOptimizer.h"
 #include "GcodeWriter.h"
 #include "ToolpathWriter.h"
 #include "Statistics.h"
