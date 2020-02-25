@@ -37,6 +37,8 @@ VariableWidthInsetGenerator::VariableWidthInsetGenerator(const Polygons& polys, 
 
 std::vector<std::list<ExtrusionLine>> VariableWidthInsetGenerator::generateToolpaths(const BeadingStrategy& beading_strategy, bool filter_outermost_marked_edges)
 {
+    initialize_graph(); // generate graph
+    
     setMarking(beading_strategy);
 
     filterMarking(marking_filter_dist);

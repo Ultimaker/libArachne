@@ -378,15 +378,7 @@ void SkeletalTrapezoidation::computeSegmentCellRange(vd_t::cell_type& cell, Poin
     end_source_point = source_segment.from();
 }
 
-SkeletalTrapezoidation::SkeletalTrapezoidation(const Polygons& polys, float transitioning_angle, coord_t discretization_step_size)
-: polys(polys)
-, transitioning_angle(transitioning_angle)
-, discretization_step_size(discretization_step_size)
-{
-    init();
-}
-
-void SkeletalTrapezoidation::init()
+void SkeletalTrapezoidation::initialize_graph()
 {
     std::vector<Point> points; // remains empty
 

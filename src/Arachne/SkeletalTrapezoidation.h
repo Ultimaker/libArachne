@@ -51,7 +51,12 @@ protected:
 public:
     using Segment = PolygonsSegmentIndex;
 
-    SkeletalTrapezoidation(const Polygons& polys, float transitioning_angle, coord_t discretization_step_size = 200);
+    SkeletalTrapezoidation(const Polygons& polys, float transitioning_angle, coord_t discretization_step_size)
+    : polys(polys)
+    , transitioning_angle(transitioning_angle)
+    , discretization_step_size(discretization_step_size)
+    {
+    }
 
     HalfEdgeGraph<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge> graph;
 
@@ -70,7 +75,7 @@ protected:
      * Another complication arises because the VD uses floating logic, which can result in zero-length segments after rounding to integers.
      * We therefore collapse edges and their whole cells afterwards.
      */
-    void init();
+    void initialize_graph();
 
     /*!
      * mapping each voronoi VD edge to the corresponding halfedge HE edge
