@@ -50,7 +50,9 @@ protected:
 
 public:
     using Segment = PolygonsSegmentIndex;
+
     SkeletalTrapezoidation(const Polygons& polys, float transitioning_angle, coord_t discretization_step_size = 200);
+
     HalfEdgeGraph<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge> graph;
 
 protected:
@@ -82,15 +84,60 @@ protected:
      * \p prev_edge serves as input and output. May be null as input.
      */
     void transfer_edge(Point from, Point to, vd_t::edge_type& vd_edge, edge_t*& prev_edge, Point& start_source_point, Point& end_source_point, const std::vector<Point>& points, const std::vector<Segment>& segments);
-    void make_rib(edge_t*& prev_edge, Point start_source_point, Point end_source_point, bool is_next_to_start_or_end);
+
+    /*!
+     * Make a support edge (a.k.a. rib) from a node to the closest location on the polygon.
+     * 
+     *    introduced
+     * B  rib   .-
+     * |  ^    /     }
+     * |_ _ _./      }-> parabolic edge which gets discretized,
+     * |     |       }   so that a new node is introduced,
+     * |     |       }   which is not in the VD.
+     * A-----o
+     * 
+     * \param prev_edge The node, as pointed to by an already created edge.
+     * \param start_source_point Start point of polygon segment (A in drawing)
+     * \param end_source_point End point of polygon segment (B in drawing)
+     */
+    void make_rib(edge_t*& prev_edge, Point start_source_point, Point end_source_point);
+
+    /*!
+     * Discretize a nonlinear edge into linear segments.
+     * 
+     * A non-linear edge is defined as an edge where the radial distance increases non-linearly.
+     * 1. A parabolic edge, the midpoints between an input polygon segment and an input polygon vertex
+     * 2. A vertex-vertex edge, the midpoints between two input polygon vertices
+     * 
+     * \param segment The nonlinear segment to discretize
+     * \param points The input points (always empty)
+     * \param segments The input segments of the input polygon
+     * \return list of points on the nonlinear edge
+     */
     std::vector<Point> discretize(const vd_t::edge_type& segment, const std::vector<Point>& points, const std::vector<Segment>& segments);
 
     /*!
+     * Compute the range of VD edges belonging inside the polygon (if any).
      * 
+     * \param cell The VD cell for which to compute the internal range of edges
      * \param[out] start_source_point output the start point of the source segment of this cell
      * \param[out] end_source_point output the end point of the source segment of this cell
+     * \param[out] starting_vd_edge output the first edge, departing from the polyon going inward
+     * \param[out] ending_vd_edge output the last edge, departing from inside the polyon and going to the polygon
+     * \return whether this cell has any associated edges on the inside
      */
     bool computePointCellRange(vd_t::cell_type& cell, Point& start_source_point, Point& end_source_point, vd_t::edge_type*& starting_vd_edge, vd_t::edge_type*& ending_vd_edge, const std::vector<Point>& points, const std::vector<Segment>& segments);
+
+    /*!
+     * Compute the range of VD edges belonging inside the polygon (if any).
+     * 
+     * \param cell The VD cell for which to compute the internal range of edges
+     * \param[out] start_source_point output the start point of the source segment of this cell
+     * \param[out] end_source_point output the end point of the source segment of this cell
+     * \param[out] starting_vd_edge output the first edge, departing from the polyon going inward
+     * \param[out] ending_vd_edge output the last edge, departing from inside the polyon and going to the polygon
+     * \return whether this cell has any associated edges on the inside
+     */
     void computeSegmentCellRange(vd_t::cell_type& cell, Point& start_source_point, Point& end_source_point, vd_t::edge_type*& starting_vd_edge, vd_t::edge_type*& ending_vd_edge, const std::vector<Point>& points, const std::vector<Segment>& segments);
 
     /*!
@@ -111,6 +158,10 @@ protected:
      * o    o
      */
     void collapseSmallEdges(coord_t snap_dist = 5);
+
+    /*!
+     * Fix an issue where two nodes are in the graph at the same location, while there should only be a single one.
+     */
     void fixNodeDuplication();
 
 public:

@@ -56,9 +56,7 @@ public:
     std::vector<std::list<ExtrusionLine>> generateToolpaths(const BeadingStrategy& beading_strategy, bool filter_outermost_marked_edges = false);
 
 protected:
-
-    // ^ init | v transitioning
-
+    
     void setMarking(const BeadingStrategy& beading_strategy); //!< set the is_marked flag for each edge based on the transitioning_angle
 
     /*!
@@ -233,6 +231,8 @@ protected:
 
     void generateExtraRibs(const BeadingStrategy& beading_strategy);
 
+    
+    
     // ^ transitioning | v toolpath generation
 
 

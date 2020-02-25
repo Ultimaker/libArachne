@@ -85,8 +85,7 @@ void SkeletalTrapezoidation::transfer_edge(Point from, Point to, vd_t::edge_type
             assert(twin->prev); // forth rib
             assert(twin->prev->twin); // back rib
             assert(twin->prev->twin->prev); // prev segment along parabola
-            bool is_next_to_start_or_end = false; // only ribs at the end of a cell should be skipped
-            make_rib(prev_edge, start_source_point, end_source_point, is_next_to_start_or_end);
+            make_rib(prev_edge, start_source_point, end_source_point);
         }
         assert(prev_edge);
     }
@@ -132,8 +131,7 @@ void SkeletalTrapezoidation::transfer_edge(Point from, Point to, vd_t::edge_type
             
             if (p1_idx < discretized.size() - 1)
             { // rib for last segment gets introduced outside this function!
-                bool is_next_to_start_or_end = false; // only ribs at the end of a cell should be skipped
-                make_rib(prev_edge, start_source_point, end_source_point, is_next_to_start_or_end);
+                make_rib(prev_edge, start_source_point, end_source_point);
             }
         }
         assert(prev_edge);
@@ -141,7 +139,7 @@ void SkeletalTrapezoidation::transfer_edge(Point from, Point to, vd_t::edge_type
     }
 }
 
-void SkeletalTrapezoidation::make_rib(edge_t*& prev_edge, Point start_source_point, Point end_source_point, bool is_next_to_start_or_end)
+void SkeletalTrapezoidation::make_rib(edge_t*& prev_edge, Point start_source_point, Point end_source_point)
 {
     Point p = LinearAlg2D::getClosestOnLineSegment(prev_edge->to->p, start_source_point, end_source_point);
     coord_t dist = vSize(prev_edge->to->p - p);
@@ -460,7 +458,7 @@ void SkeletalTrapezoidation::init()
         // starting_edge->prev = nullptr;
 //         starting_edge->from->data.distance_to_boundary = 0; // TODO
 
-        make_rib(prev_edge, start_source_point, end_source_point, true);
+        make_rib(prev_edge, start_source_point, end_source_point);
         for (vd_t::edge_type* vd_edge = starting_vd_edge->next(); vd_edge != ending_vd_edge; vd_edge = vd_edge->next())
         {
             assert(vd_edge->is_finite());
@@ -468,7 +466,7 @@ void SkeletalTrapezoidation::init()
             Point v2 = VoronoiUtils::p(vd_edge->vertex1());
             transfer_edge(v1, v2, *vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
 
-            make_rib(prev_edge, start_source_point, end_source_point, vd_edge->next() == ending_vd_edge);
+            make_rib(prev_edge, start_source_point, end_source_point);
         }
 
         transfer_edge(VoronoiUtils::p(ending_vd_edge->vertex0()), end_source_point, *ending_vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
