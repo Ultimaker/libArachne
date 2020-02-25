@@ -10,17 +10,19 @@ namespace arachne
 
 class SkeletalTrapezoidationEdge
 {
-    using type_t = int_least16_t;
 public:
-    type_t type;
-    static constexpr type_t NORMAL = 0; // from voronoi diagram
-    static constexpr type_t EXTRA_VD = 1; // introduced to voronoi diagram in order to make the gMAT
-    static constexpr type_t TRANSITION_END = 2; // introduced to voronoi diagram in order to make the gMAT
+    enum Type : int_least16_t
+    {
+        NORMAL = 0,        // from voronoi diagram
+        EXTRA_VD = 1,      // introduced to voronoi diagram in order to make the skeletal trapezoidation
+        TRANSITION_END = 2 // introduced to voronoi diagram in order to support transitions
+    };
+    Type type;
 
     SkeletalTrapezoidationEdge()
     : SkeletalTrapezoidationEdge(NORMAL)
     {}
-    SkeletalTrapezoidationEdge(type_t type)
+    SkeletalTrapezoidationEdge(Type type)
     : type(type)
     , is_marked(-1)
     {}
