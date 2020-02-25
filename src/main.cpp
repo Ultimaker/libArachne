@@ -21,7 +21,7 @@
 #include "utils/SVG.h"
 #include "utils/ToolpathVisualizer.h"
 
-#include "Arachne/SkeletalTrapezoidation.h"
+#include "Arachne/VariableWidthInsetGenerator.h"
 
 #include "Arachne/BeadingStrategies/BeadingStrategyHelper.h"
 
@@ -198,9 +198,9 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
     {
         filter_outermost_marked_edges_now = true;
     }
-    SkeletalTrapezoidation st(polys, transitioning_angle, discretization_step_size, transition_filter_dist, beading_propagation_transition_dist);
+    VariableWidthInsetGenerator inset_generator(polys, transitioning_angle, discretization_step_size, transition_filter_dist, beading_propagation_transition_dist);
 
-    std::vector<std::list<ExtrusionLine>> result_polylines_per_index = st.generateToolpaths(*beading_strategy, filter_outermost_marked_edges_now);
+    std::vector<std::list<ExtrusionLine>> result_polylines_per_index = inset_generator.generateToolpaths(*beading_strategy, filter_outermost_marked_edges_now);
 
     if (max_bead_count > 0)
     { // throw away generated odd beads in the middle
@@ -249,7 +249,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
     {
         {
             STLwriter stl("output/st_bead_count.stl");
-            st.debugOutput(stl, true);
+            inset_generator.debugOutputSTL(stl, true);
         }
         logAlways("Writing MAT STL took %fs\n", tk.restart());
     }
@@ -257,7 +257,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
     if (analyse)
     {
         Statistics stats(to_string(type), output_prefix, polys, processing_time);
-        stats.analyse(result_polygons_per_index, result_polylines_per_index, &st);
+        stats.analyse(result_polygons_per_index, result_polylines_per_index, &inset_generator );
         logAlways("Analysis took %fs\n", tk.restart());
         stats.saveResultsCSV();
         if (visualize)
