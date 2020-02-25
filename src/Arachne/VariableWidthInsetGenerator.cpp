@@ -278,6 +278,16 @@ bool VariableWidthInsetGenerator::filterUnmarkedRegions(edge_t* to_edge, coord_t
     return dissolve;
 }
 
+//
+// ^^^^^^^^^^^^^^^^^^^^^
+//       MARKING
+// =====================
+//
+// =====================
+//    TRANSTISIONING
+// vvvvvvvvvvvvvvvvvvvvv
+//
+
 void VariableWidthInsetGenerator::generateTransitioningRibs(const BeadingStrategy& beading_strategy)
 {
         debugCheckGraphCompleteness();
@@ -1405,33 +1415,33 @@ void VariableWidthInsetGenerator::propagateBeadingsDownward(edge_t* edge_to_peak
 }
 
 
-VariableWidthInsetGenerator::Beading VariableWidthInsetGenerator::interpolate(const Beading& left, float ratio_left_to_whole, const Beading& right, coord_t switching_radius) const
+VariableWidthInsetGenerator::Beading VariableWidthInsetGenerator::interpolate(const Beading& top, float ratio_top_to_whole, const Beading& bottom, coord_t switching_radius) const
 {
-    assert(ratio_left_to_whole >= 0.0 && ratio_left_to_whole <= 1.0);
-    Beading ret = interpolate(left, ratio_left_to_whole, right);
+    assert( ratio_top_to_whole >= 0.0 && ratio_top_to_whole <= 1.0);
+    Beading ret = interpolate(top, ratio_top_to_whole, bottom);
 
     // TODO: don't use toolpath locations past the middle!
     // TODO: stretch bead widths and locations of the higher bead count beading to fit in the left over space
     coord_t next_inset_idx;
-    for (next_inset_idx = left.toolpath_locations.size() - 1; next_inset_idx >= 0; next_inset_idx--)
+    for (next_inset_idx = top.toolpath_locations.size() - 1; next_inset_idx >= 0; next_inset_idx--)
     {
-        if (switching_radius > left.toolpath_locations[next_inset_idx])
+        if (switching_radius > top.toolpath_locations[next_inset_idx])
         {
             break;
         }
     }
     if (next_inset_idx < 0)
     { // there is no next inset, because there is only one
-        assert(left.toolpath_locations.empty() || left.toolpath_locations.front() >= switching_radius);
+        assert(top.toolpath_locations.empty() || top.toolpath_locations.front() >= switching_radius);
         return ret;
     }
-    if (next_inset_idx + 1 == coord_t(left.toolpath_locations.size()))
+    if (next_inset_idx + 1 == coord_t( top.toolpath_locations.size()))
     { // we cant adjust to fit the next edge because there is no previous one?!
         return ret;
     }
-    assert(next_inset_idx < coord_t(left.toolpath_locations.size()));
-    assert(left.toolpath_locations[next_inset_idx] <= switching_radius);
-    assert(left.toolpath_locations[next_inset_idx + 1] >= switching_radius);
+    assert(next_inset_idx < coord_t( top.toolpath_locations.size()));
+    assert(top.toolpath_locations[next_inset_idx] <= switching_radius);
+    assert(top.toolpath_locations[next_inset_idx + 1] >= switching_radius);
     if (ret.toolpath_locations[next_inset_idx] > switching_radius)
     { // one inset disappeared between left and the merged one
         // solve for ratio f:
@@ -1440,24 +1450,24 @@ VariableWidthInsetGenerator::Beading VariableWidthInsetGenerator::interpolate(co
         // f*(l-r) + r = s
         // f*(l-r) = s - r
         // f = (s-r) / (l-r)
-        float new_ratio = static_cast<float>(switching_radius - right.toolpath_locations[next_inset_idx]) / static_cast<float>(left.toolpath_locations[next_inset_idx] - right.toolpath_locations[next_inset_idx]);
+        float new_ratio = static_cast<float>(switching_radius - bottom.toolpath_locations[next_inset_idx]) / static_cast<float>( top.toolpath_locations[next_inset_idx] - bottom.toolpath_locations[next_inset_idx]);
         new_ratio = std::min(1.0, new_ratio + 0.1);
-        return interpolate(left, new_ratio, right);
+        return interpolate( top, new_ratio, bottom);
     }
     return ret;
 }
 
 
-VariableWidthInsetGenerator::Beading VariableWidthInsetGenerator::interpolate(const Beading& left, float ratio_left_to_whole, const Beading& right) const
+VariableWidthInsetGenerator::Beading VariableWidthInsetGenerator::interpolate(const Beading& top, float ratio_top_to_whole, const Beading& bottom) const
 {
-    assert(ratio_left_to_whole >= 0.0 && ratio_left_to_whole <= 1.0);
-    float ratio_right_to_whole = 1.0 - ratio_left_to_whole;
+    assert( ratio_top_to_whole >= 0.0 && ratio_top_to_whole <= 1.0);
+    float ratio_right_to_whole = 1.0 - ratio_top_to_whole;
 
-    Beading ret = (left.total_thickness > right.total_thickness)? left : right;
-    for (size_t inset_idx = 0; inset_idx < std::min(left.bead_widths.size(), right.bead_widths.size()); inset_idx++)
+    Beading ret = (top.total_thickness > bottom.total_thickness)? top : bottom;
+    for (size_t inset_idx = 0; inset_idx < std::min( top.bead_widths.size(), bottom.bead_widths.size()); inset_idx++)
     {
-        ret.bead_widths[inset_idx] = ratio_left_to_whole * left.bead_widths[inset_idx] + ratio_right_to_whole * right.bead_widths[inset_idx];
-        ret.toolpath_locations[inset_idx] = ratio_left_to_whole * left.toolpath_locations[inset_idx] + ratio_right_to_whole * right.toolpath_locations[inset_idx];
+        ret.bead_widths[inset_idx] = ratio_top_to_whole * top.bead_widths[inset_idx] + ratio_right_to_whole * bottom.bead_widths[inset_idx];
+        ret.toolpath_locations[inset_idx] = ratio_top_to_whole * top.toolpath_locations[inset_idx] + ratio_right_to_whole * bottom.toolpath_locations[inset_idx];
     }
     return ret;
 }
