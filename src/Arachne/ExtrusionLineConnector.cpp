@@ -16,27 +16,17 @@ namespace arachne
 void ExtrusionLineConnector::optimize(std::vector<std::list<ExtrusionLine>>& polygons_per_index, std::vector<std::list<ExtrusionLine>>& polylines_per_index, bool reduce_overlapping_segments, bool connect_odd_lines_to_polygons)
 {
     ExtrusionLineConnector optimizer(polylines_per_index);
-    optimizer.fuzzyConnect(polygons_per_index, snap_dist, reduce_overlapping_segments, connect_odd_lines_to_polygons);
+    optimizer.fuzzyConnect(polygons_per_index, reduce_overlapping_segments, connect_odd_lines_to_polygons);
 }
 
-ExtrusionLineConnector::ExtrusionLineConnector(std::vector<std::list<ExtrusionLine>>& polylines_per_index)
-: polylines_per_index(polylines_per_index)
+ExtrusionLineConnector::ExtrusionLineConnector(std::vector<std::list<ExtrusionLine>>& polylines_per_index, float intersection_overlap)
+: intersection_overlap(intersection_overlap)
+, polylines_per_index(polylines_per_index)
 {
-    for (auto& polylines : polylines_per_index)
-    {
-        for (std::list<ExtrusionLine>::iterator polyline_it = polylines.begin(); polyline_it != polylines.end(); ++polyline_it)
-        {
-            ExtrusionLine& polyline = *polyline_it;
-            assert(polyline.junctions.size() >= 2); // otherwise the front and back ExtrusionLineEndRef would be mapped to from the same location
-            if (polyline.junctions.empty()) continue; // shouldn't happen
-            polyline_end_points.emplace(polyline.junctions.front().p, ExtrusionLineEndRef(polyline.inset_idx, polyline_it, true));
-            polyline_end_points.emplace(polyline.junctions.back().p, ExtrusionLineEndRef(polyline.inset_idx, polyline_it, false));
-        }
-    }
 }
 
 
-void ExtrusionLineConnector::fuzzyConnect(std::vector<std::list<ExtrusionLine>>& polygons_per_index, coord_t snap_dist, bool reduce_overlapping_segments, bool connect_odd_lines_to_polygons)
+void ExtrusionLineConnector::fuzzyConnect(std::vector<std::list<ExtrusionLine>>& polygons_per_index, bool reduce_overlapping_segments, bool connect_odd_lines_to_polygons)
 {
     struct Locator
     {
