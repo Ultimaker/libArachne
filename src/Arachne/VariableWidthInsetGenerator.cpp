@@ -50,15 +50,14 @@ std::vector<std::list<ExtrusionLine>> VariableWidthInsetGenerator::generateToolp
     TrapezoidationQuantizer quantizer(st, beading_strategy, polys, transitioning_angle, discretization_step_size, transition_filter_dist);
     quantizer.applyBeadCounts(filter_outermost_marked_edges);
 
-    std::vector<std::list<ExtrusionLine>> result_polylines_per_index;
-    generateSegments(result_polylines_per_index);
+    generateSegments();
     // junctions = generateJunctions
 
     return result_polylines_per_index;
 }
 
 
-void VariableWidthInsetGenerator::generateSegments(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index)
+void VariableWidthInsetGenerator::generateSegments()
 {
     std::vector<edge_t*> upward_quad_mids;
     for (edge_t& edge : st.graph.edges)
@@ -139,9 +138,9 @@ void VariableWidthInsetGenerator::generateSegments(std::vector<std::list<Extrusi
     }
 #endif
 
-    connectJunctions(result_polylines_per_index);
+    connectJunctions();
     
-    generateLocalMaximaSingleBeads(result_polylines_per_index);
+    generateLocalMaximaSingleBeads();
 }
 
 VariableWidthInsetGenerator::edge_t* VariableWidthInsetGenerator::getQuadMaxRedgeTo(edge_t* quad_start_edge)
@@ -483,7 +482,7 @@ VariableWidthInsetGenerator::BeadingPropagation* VariableWidthInsetGenerator::ge
     return nullptr;
 }
 
-void VariableWidthInsetGenerator::connectJunctions(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index)
+void VariableWidthInsetGenerator::connectJunctions()
 {   
     auto getNextQuad = [](edge_t* quad_start)
     {
@@ -492,7 +491,7 @@ void VariableWidthInsetGenerator::connectJunctions(std::vector<std::list<Extrusi
         return quad_end->twin;
     };
     
-    auto addSegment = [&result_polylines_per_index](ExtrusionJunction& from, ExtrusionJunction& to, bool is_odd, bool force_new_path)
+    auto addSegment = [this](ExtrusionJunction& from, ExtrusionJunction& to, bool is_odd, bool force_new_path)
     {
         if (from == to) return;
 
@@ -615,7 +614,7 @@ bool VariableWidthInsetGenerator::isMultiIntersection(node_t* node)
     return odd_path_count > 2;
 }
 
-void VariableWidthInsetGenerator::generateLocalMaximaSingleBeads(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index)
+void VariableWidthInsetGenerator::generateLocalMaximaSingleBeads()
 {
     for (auto pair : node_to_beading)
     {

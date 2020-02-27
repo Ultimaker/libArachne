@@ -103,12 +103,14 @@ private:
 
     std::unordered_map<edge_t*, std::vector<ExtrusionJunction>> edge_to_junctions; //<! junctions ordered high R to low R
 
+    std::vector<std::list<ExtrusionLine>> result_polylines_per_index;
+
     /*!
      * Generate ExtrusionLines.
      * 
      * \param[out] segments the generated segments
      */
-    void generateSegments(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index);
+    void generateSegments();
 
     /*!
      * Get the edge pointing to the node with the maximum distance_to_boundary
@@ -206,9 +208,8 @@ private:
 
     /*!
      * connect junctions in each quad
-     * \param[out] result_polylines_per_index the generated segments
      */
-    void connectJunctions(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index);
+    void connectJunctions();
 
     /*!
      * Whether more than 2 extrusion lines end in this \p node.
@@ -218,9 +219,8 @@ private:
 
     /*!
      * Genrate small extrusion segments for local maxima where the beading would only result in a single bead.
-     * \param[out] segments the generated segments
      */
-    void generateLocalMaximaSingleBeads(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index);
+    void generateLocalMaximaSingleBeads();
 
     /*!
      * edge_to_junctions[edge]
