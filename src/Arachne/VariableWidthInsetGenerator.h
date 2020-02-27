@@ -82,6 +82,26 @@ public:
 private:
 
     /*!
+     * Helper object to store Beadings on unmarked nodes.
+     * These beadings originate from marked nodes, from where they are propagated to unmakred nodes.
+     */
+    struct BeadingPropagation
+    {
+        Beading beading;
+        coord_t dist_to_bottom_source;
+        coord_t dist_from_top_source;
+        bool is_upward_propagated_only; //!< Whether the doward propagation phase has not processed this beading yet.
+        BeadingPropagation(const Beading& beading)
+        : beading(beading)
+        , dist_to_bottom_source(0)
+        , dist_from_top_source(0)
+        , is_upward_propagated_only(false)
+        {}
+    };
+    
+    std::unordered_map<node_t*, BeadingPropagation> node_to_beading;
+
+    /*!
      * Generate ExtrusionLines.
      * 
      * \param[out] segments the generated segments
@@ -104,24 +124,6 @@ private:
     edge_t* getQuadMaxRedgeTo(edge_t* quad_start_edge);
 
     /*!
-     * Helper object to store Beadings on unmarked nodes.
-     * These beadings originate from marked nodes, from where they are propagated to unmakred nodes.
-     */
-    struct BeadingPropagation
-    {
-        Beading beading;
-        coord_t dist_to_bottom_source;
-        coord_t dist_from_top_source;
-        bool is_upward_propagated_only; //!< Whether the doward propagation phase has not processed this beading yet.
-        BeadingPropagation(const Beading& beading)
-        : beading(beading)
-        , dist_to_bottom_source(0)
-        , dist_from_top_source(0)
-        , is_upward_propagated_only(false)
-        {}
-    };
-
-    /*!
      * propagate beading info from lower R nodes to higher R nodes
      * 
      * only propagate from nodes with beading info upward to nodes without beading info
@@ -131,10 +133,8 @@ private:
      * In upward propagated beadings we store the distance traveled, so that we can merge these beadings with the downward propagated beadings in \ref propagateBeadingsDownward(.)
      * 
      * \param upward_quad_mids all upward halfedges of the inner skeletal edges (not directly connected to the outline) sorted on their highest [distance_to_boundary]. Higher dist first.
-     * \param node_to_beading mapping each node to a \ref BeadingPropagation
-     * \param beading_strategy The beading strategy
      */
-    void propagateBeadingsUpward(std::vector<edge_t*>& upward_quad_mids, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
+    void propagateBeadingsUpward(std::vector<edge_t*>& upward_quad_mids);
 
     /*!
      * propagate beading info from higher R nodes to lower R nodes
@@ -146,10 +146,8 @@ private:
      * edges are sorted so that we can do a depth-first walk without employing a recursive algorithm
      * 
      * \param upward_quad_mids all upward halfedges of the inner skeletal edges (not directly connected to the outline) sorted on their highest [distance_to_boundary]. Higher dist first.
-     * \param node_to_beading mapping each node to a \ref BeadingPropagation
-     * \param beading_strategy The beading strategy
      */
-    void propagateBeadingsDownward(std::vector<edge_t*>& upward_quad_mids, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
+    void propagateBeadingsDownward(std::vector<edge_t*>& upward_quad_mids);
 
     /*!
      * propagate beading info from higher R nodes to lower R nodes
@@ -159,10 +157,8 @@ private:
      * don't transfer to nodes which lie on the outline polygon
      * 
      * \param upward_quad_mids all upward halfedges of the inner skeletal edges (not directly connected to the outline) sorted on their highest [distance_to_boundary]. Higher dist first.
-     * \param node_to_beading mapping each node to a \ref BeadingPropagation
-     * \param beading_strategy The beading strategy
      */
-    void propagateBeadingsDownward(edge_t* edge_to_peak, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
+    void propagateBeadingsDownward(edge_t* edge_to_peak);
 
     /*!
      * Interpolate between the beading propagated from above and the one propagated from below.
@@ -188,27 +184,24 @@ private:
     /*!
      * node_to_beading[node]
      * with extra safety instructions in case that function call should fail somehow.
-     * \param node_to_beading mapping each node to a \ref BeadingPropagation
      * \param beading_strategy The beading strategy
      */
-    BeadingPropagation& getBeading(node_t* node, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
+    BeadingPropagation& getBeading(node_t* node);
 
     /*!
      * In case we cannot find the beading of a node, get a beading from the nearest node
      * 
      * \param node The node for which we weren't able to find a beading
      * \param max_dist The maximum distance from the \p node after which to give up
-     * \param node_to_beading mapping each node to a \ref BeadingPropagation
      */
-    BeadingPropagation* getNearestBeading(node_t* node, coord_t max_dist, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
+    BeadingPropagation* getNearestBeading(node_t* node, coord_t max_dist);
 
     /*!
      * generate junctions for each unmarked edge
-     * \param node_to_beading mapping each node to a \ref BeadingPropagation
      * \param[out] edge_to_junctions junctions ordered high R to low R
      * \param beading_strategy The beading strategy
      */
-    void generateJunctions(std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);
+    void generateJunctions(std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);
 
     /*!
      * connect junctions in each quad
@@ -227,7 +220,7 @@ private:
      * Genrate small extrusion segments for local maxima where the beading would only result in a single bead.
      * \param[out] segments the generated segments
      */
-    void generateLocalMaximaSingleBeads(std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, std::vector<std::list<ExtrusionLine>>& result_polylines_per_index);
+    void generateLocalMaximaSingleBeads(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index);
 
     /*!
      * edge_to_junctions[edge]
@@ -243,7 +236,7 @@ private:
 public:
     void debugCheckDecorationConsistency(bool transitioned); //!< Check logical relationships relting to distance_to_boundary and is_marked etc. Should be true anywhere after setMarking(.)
     void debugOutput(SVG& svg, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);
-    void debugOutput(STLwriter& stl, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
+    void debugOutput(STLwriter& stl, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);
 protected:
     SVG::ColorObject getColor(edge_t& edge);
 

@@ -37,7 +37,7 @@ const Polygons& polys
 , polys(polys)
 , beading_strategy(beading_strategy)
 , transitioning_angle(transitioning_angle)
-, discretization_step_size()
+, discretization_step_size(discretization_step_size)
 , transition_filter_dist(transition_filter_dist)
 , beading_propagation_transition_dist(beading_propagation_transition_dist)
 {
@@ -95,8 +95,7 @@ void VariableWidthInsetGenerator::generateSegments(std::vector<std::list<Extrusi
             }
             return a->to->data.distance_to_boundary > b->to->data.distance_to_boundary;
         });
-    
-    std::unordered_map<node_t*, BeadingPropagation> node_to_beading;
+
     { // store beading
         for (node_t& node : st.graph.nodes)
         {
@@ -120,12 +119,12 @@ void VariableWidthInsetGenerator::generateSegments(std::vector<std::list<Extrusi
         }
     }
     
-    propagateBeadingsUpward(upward_quad_mids, node_to_beading);
+    propagateBeadingsUpward(upward_quad_mids);
 
-    propagateBeadingsDownward(upward_quad_mids, node_to_beading);
+    propagateBeadingsDownward(upward_quad_mids);
     
     std::unordered_map<edge_t*, std::vector<ExtrusionJunction>> edge_to_junctions; // junctions ordered high R to low R
-    generateJunctions(node_to_beading, edge_to_junctions);
+    generateJunctions(edge_to_junctions);
 
 
 #ifdef DEBUG
@@ -137,13 +136,13 @@ void VariableWidthInsetGenerator::generateSegments(std::vector<std::list<Extrusi
     if (generate_MAT_STL)
     {
         STLwriter stl("output/vq.stl");
-        debugOutput(stl, edge_to_junctions, node_to_beading);
+        debugOutput(stl, edge_to_junctions);
     }
 #endif
 
     connectJunctions(edge_to_junctions, result_polylines_per_index);
     
-    generateLocalMaximaSingleBeads(node_to_beading, result_polylines_per_index);
+    generateLocalMaximaSingleBeads(result_polylines_per_index);
 }
 
 VariableWidthInsetGenerator::edge_t* VariableWidthInsetGenerator::getQuadMaxRedgeTo(edge_t* quad_start_edge)
@@ -170,7 +169,7 @@ VariableWidthInsetGenerator::edge_t* VariableWidthInsetGenerator::getQuadMaxRedg
     return ret;
 }
 
-void VariableWidthInsetGenerator::propagateBeadingsUpward(std::vector<edge_t*>& upward_quad_mids, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading)
+void VariableWidthInsetGenerator::propagateBeadingsUpward(std::vector<edge_t*>& upward_quad_mids)
 {
     for (auto upward_quad_mids_it = upward_quad_mids.rbegin(); upward_quad_mids_it != upward_quad_mids.rend(); ++upward_quad_mids_it)
     {
@@ -200,7 +199,7 @@ void VariableWidthInsetGenerator::propagateBeadingsUpward(std::vector<edge_t*>& 
     }
 }
 
-void VariableWidthInsetGenerator::propagateBeadingsDownward(std::vector<edge_t*>& upward_quad_mids, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading)
+void VariableWidthInsetGenerator::propagateBeadingsDownward(std::vector<edge_t*>& upward_quad_mids)
 {
     for (edge_t* upward_quad_mid : upward_quad_mids)
     {
@@ -213,20 +212,20 @@ void VariableWidthInsetGenerator::propagateBeadingsDownward(std::vector<edge_t*>
                 && node_to_beading.find(upward_quad_mid->to) == node_to_beading.end()
             )
             {
-                propagateBeadingsDownward(upward_quad_mid->twin, node_to_beading);
+                propagateBeadingsDownward(upward_quad_mid->twin);
             }
             else
             {
-                propagateBeadingsDownward(upward_quad_mid, node_to_beading);
+                propagateBeadingsDownward(upward_quad_mid);
             }
         }
     }
 }
 
-void VariableWidthInsetGenerator::propagateBeadingsDownward(edge_t* edge_to_peak, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading)
+void VariableWidthInsetGenerator::propagateBeadingsDownward(edge_t* edge_to_peak)
 {
     coord_t length = vSize(edge_to_peak->to->p - edge_to_peak->from->p);
-    BeadingPropagation& top_beading = getBeading(edge_to_peak->to, node_to_beading);
+    BeadingPropagation& top_beading = getBeading(edge_to_peak->to);
     assert(top_beading.beading.total_thickness >= edge_to_peak->to->data.distance_to_boundary * 2);
     assert( ! top_beading.is_upward_propagated_only);
 
@@ -332,7 +331,7 @@ VariableWidthInsetGenerator::Beading VariableWidthInsetGenerator::interpolate(co
     return ret;
 }
 
-void VariableWidthInsetGenerator::generateJunctions(std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions)
+void VariableWidthInsetGenerator::generateJunctions(std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions)
 {
     for (edge_t& edge_ : st.graph.edges)
     {
@@ -345,7 +344,7 @@ void VariableWidthInsetGenerator::generateJunctions(std::unordered_map<node_t*, 
         coord_t start_R = edge->to->data.distance_to_boundary; // higher R
         coord_t end_R = edge->from->data.distance_to_boundary; // lower R
 
-        Beading* beading = &getBeading(edge->to, node_to_beading).beading;
+        Beading* beading = &getBeading(edge->to).beading;
         std::vector<ExtrusionJunction>& ret = edge_to_junctions[edge]; // emplace a new vector
         if ((edge->from->data.bead_count == edge->to->data.bead_count && edge->from->data.bead_count >= 0)
             || end_R >= start_R)
@@ -407,7 +406,7 @@ const std::vector<ExtrusionJunction>& VariableWidthInsetGenerator::getJunctions(
 }
 
 
-VariableWidthInsetGenerator::BeadingPropagation& VariableWidthInsetGenerator::getBeading(node_t* node, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading)
+VariableWidthInsetGenerator::BeadingPropagation& VariableWidthInsetGenerator::getBeading(node_t* node)
 {
     auto beading_it = node_to_beading.find(node);
     if (beading_it == node_to_beading.end())
@@ -415,7 +414,7 @@ VariableWidthInsetGenerator::BeadingPropagation& VariableWidthInsetGenerator::ge
         if (node->data.bead_count == -1)
         { // This bug is due to too small marked edges
             constexpr coord_t nearby_dist = 100; // TODO
-            BeadingPropagation* nearest_beading = getNearestBeading(node, nearby_dist, node_to_beading);
+            BeadingPropagation* nearest_beading = getNearestBeading(node, nearby_dist);
             if (nearest_beading) return *nearest_beading;
             // else make a new beading:
             bool has_marked_edge = false;
@@ -443,7 +442,7 @@ VariableWidthInsetGenerator::BeadingPropagation& VariableWidthInsetGenerator::ge
     return beading_it->second;
 }
 
-VariableWidthInsetGenerator::BeadingPropagation* VariableWidthInsetGenerator::getNearestBeading(node_t* node, coord_t max_dist, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading)
+VariableWidthInsetGenerator::BeadingPropagation* VariableWidthInsetGenerator::getNearestBeading(node_t* node, coord_t max_dist)
 {
     struct DistEdge
     {
@@ -617,7 +616,7 @@ bool VariableWidthInsetGenerator::isMultiIntersection(node_t* node)
     return odd_path_count > 2;
 }
 
-void VariableWidthInsetGenerator::generateLocalMaximaSingleBeads(std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, std::vector<std::list<ExtrusionLine>>& result_polylines_per_index)
+void VariableWidthInsetGenerator::generateLocalMaximaSingleBeads(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index)
 {
     for (auto pair : node_to_beading)
     {
@@ -710,13 +709,13 @@ void VariableWidthInsetGenerator::debugOutput(SVG& svg, std::unordered_map<edge_
             svg.writePoint(junction.p, false, 2, SVG::Color::YELLOW);
 }
 
-void VariableWidthInsetGenerator::debugOutput(STLwriter& stl, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading)
+void VariableWidthInsetGenerator::debugOutput(STLwriter& stl, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions)
 {
     auto toPoint3 = [](Point p, float h)
     {
         return Point3(p.X, p.Y, h * 200);
     };
-    auto getHeight = [&node_to_beading](node_t* node)
+    auto getHeight = [this](node_t* node)
     {
         auto found = node_to_beading.find(node);
         if (found == node_to_beading.end())
