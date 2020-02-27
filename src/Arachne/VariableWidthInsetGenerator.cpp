@@ -123,24 +123,23 @@ void VariableWidthInsetGenerator::generateSegments(std::vector<std::list<Extrusi
 
     propagateBeadingsDownward(upward_quad_mids);
     
-    std::unordered_map<edge_t*, std::vector<ExtrusionJunction>> edge_to_junctions; // junctions ordered high R to low R
-    generateJunctions(edge_to_junctions);
+    generateJunctions();
 
 
 #ifdef DEBUG
     {
         SVG svg("output/junctions.svg", AABB(polys));
         st.debugOutput(svg, false, false, true, false);
-        debugOutput(svg, edge_to_junctions);
+        debugOutput(svg);
     }
     if (generate_MAT_STL)
     {
         STLwriter stl("output/vq.stl");
-        debugOutput(stl, edge_to_junctions);
+        debugOutput(stl);
     }
 #endif
 
-    connectJunctions(edge_to_junctions, result_polylines_per_index);
+    connectJunctions(result_polylines_per_index);
     
     generateLocalMaximaSingleBeads(result_polylines_per_index);
 }
@@ -331,7 +330,7 @@ VariableWidthInsetGenerator::Beading VariableWidthInsetGenerator::interpolate(co
     return ret;
 }
 
-void VariableWidthInsetGenerator::generateJunctions(std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions)
+void VariableWidthInsetGenerator::generateJunctions()
 {
     for (edge_t& edge_ : st.graph.edges)
     {
@@ -397,7 +396,7 @@ void VariableWidthInsetGenerator::generateJunctions(std::unordered_map<edge_t*, 
     }
 }
 
-const std::vector<ExtrusionJunction>& VariableWidthInsetGenerator::getJunctions(edge_t* edge, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions)
+const std::vector<ExtrusionJunction>& VariableWidthInsetGenerator::getJunctions(edge_t* edge)
 {
     assert(edge->to->data.distance_to_boundary >= edge->from->data.distance_to_boundary);
     auto ret_it = edge_to_junctions.find(edge);
@@ -484,7 +483,7 @@ VariableWidthInsetGenerator::BeadingPropagation* VariableWidthInsetGenerator::ge
     return nullptr;
 }
 
-void VariableWidthInsetGenerator::connectJunctions(std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions, std::vector<std::list<ExtrusionLine>>& result_polylines_per_index)
+void VariableWidthInsetGenerator::connectJunctions(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index)
 {   
     auto getNextQuad = [](edge_t* quad_start)
     {
@@ -553,11 +552,11 @@ void VariableWidthInsetGenerator::connectJunctions(std::unordered_map<edge_t*, s
             
             
             
-            std::vector<ExtrusionJunction> from_junctions = getJunctions(edge_to_peak, edge_to_junctions);
-            std::vector<ExtrusionJunction> to_junctions = getJunctions(edge_from_peak->twin, edge_to_junctions);
+            std::vector<ExtrusionJunction> from_junctions = getJunctions(edge_to_peak);
+            std::vector<ExtrusionJunction> to_junctions = getJunctions(edge_from_peak->twin);
             if (edge_to_peak->prev)
             {
-                std::vector<ExtrusionJunction> from_prev_junctions = getJunctions(edge_to_peak->prev, edge_to_junctions);
+                std::vector<ExtrusionJunction> from_prev_junctions = getJunctions(edge_to_peak->prev);
                 if (!from_junctions.empty() && !from_prev_junctions.empty() && from_junctions.back().perimeter_index == from_prev_junctions.front().perimeter_index)
                 {
                     from_junctions.pop_back();
@@ -568,7 +567,7 @@ void VariableWidthInsetGenerator::connectJunctions(std::unordered_map<edge_t*, s
             }
             if (edge_from_peak->next)
             {
-                std::vector<ExtrusionJunction> to_next_junctions = getJunctions(edge_from_peak->next->twin, edge_to_junctions);
+                std::vector<ExtrusionJunction> to_next_junctions = getJunctions(edge_from_peak->next->twin);
                 if (!to_junctions.empty() && !to_next_junctions.empty() && to_junctions.back().perimeter_index == to_next_junctions.front().perimeter_index)
                 {
                     to_junctions.pop_back();
@@ -690,7 +689,7 @@ SVG::ColorObject VariableWidthInsetGenerator::getColor(edge_t& edge)
 }
 
 
-void VariableWidthInsetGenerator::debugOutput(SVG& svg, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions)
+void VariableWidthInsetGenerator::debugOutput(SVG& svg)
 {
     for (auto& pair : edge_to_junctions)
         for (ExtrusionJunction& junction : pair.second)
@@ -709,7 +708,7 @@ void VariableWidthInsetGenerator::debugOutput(SVG& svg, std::unordered_map<edge_
             svg.writePoint(junction.p, false, 2, SVG::Color::YELLOW);
 }
 
-void VariableWidthInsetGenerator::debugOutput(STLwriter& stl, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions)
+void VariableWidthInsetGenerator::debugOutput(STLwriter& stl)
 {
     auto toPoint3 = [](Point p, float h)
     {

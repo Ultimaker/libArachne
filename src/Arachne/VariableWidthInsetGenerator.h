@@ -101,6 +101,8 @@ private:
     
     std::unordered_map<node_t*, BeadingPropagation> node_to_beading;
 
+    std::unordered_map<edge_t*, std::vector<ExtrusionJunction>> edge_to_junctions; //<! junctions ordered high R to low R
+
     /*!
      * Generate ExtrusionLines.
      * 
@@ -198,17 +200,15 @@ private:
 
     /*!
      * generate junctions for each unmarked edge
-     * \param[out] edge_to_junctions junctions ordered high R to low R
      * \param beading_strategy The beading strategy
      */
-    void generateJunctions(std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);
+    void generateJunctions();
 
     /*!
      * connect junctions in each quad
-     * \param edge_to_junctions junctions ordered high R to low R
      * \param[out] result_polylines_per_index the generated segments
      */
-    void connectJunctions(std::unordered_map<edge_t*, std::vector<arachne::ExtrusionJunction>>& edge_to_junctions, std::vector<std::list<ExtrusionLine>>& result_polylines_per_index);
+    void connectJunctions(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index);
 
     /*!
      * Whether more than 2 extrusion lines end in this \p node.
@@ -229,14 +229,14 @@ private:
      * 
      * \param include_odd_start_junction Whether to leave out the first junction if it coincides with \p edge.from->p
      */
-    const std::vector<ExtrusionJunction>& getJunctions(edge_t* edge, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);
+    const std::vector<ExtrusionJunction>& getJunctions(edge_t* edge);
     
     // ^ toolpath generation | v helpers
 
 public:
     void debugCheckDecorationConsistency(bool transitioned); //!< Check logical relationships relting to distance_to_boundary and is_marked etc. Should be true anywhere after setMarking(.)
-    void debugOutput(SVG& svg, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);
-    void debugOutput(STLwriter& stl, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);
+    void debugOutput(SVG& svg);
+    void debugOutput(STLwriter& stl);
 protected:
     SVG::ColorObject getColor(edge_t& edge);
 
