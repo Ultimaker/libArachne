@@ -52,6 +52,8 @@ public:
 private:
     const Polygons& polys; //!< input outline boundary shape
 
+    const BeadingStrategy& beading_strategy;
+    
     float transitioning_angle; //!< How pointy a region should be before we apply the method. Equals 180* - limit_bisector_angle
     coord_t discretization_step_size; //!< approximate size of segments when parabolic VD edges get discretized (and vertex-vertex edges)
     coord_t transition_filter_dist; //!< filter transition mids (i.e. anchors) closer together than this
@@ -60,7 +62,10 @@ private:
     coord_t snap_dist = 20; //!< generic arithmatic inaccuracy. Only used to determine whether a transition really needs to insert an extra edge.
 
 public:
-    VariableWidthInsetGenerator(const Polygons& polys, float transitioning_angle
+    VariableWidthInsetGenerator(
+    const Polygons& polys
+    , const BeadingStrategy& beading_strategy
+    , float transitioning_angle
     , coord_t discretization_step_size = 200
     , coord_t transition_filter_dist = 1000
     , coord_t beading_propagation_transition_dist = 400
@@ -72,7 +77,7 @@ public:
      * \param beading_strategy The strategy to fill space using (variable width0 insets
      * \param filter_outermost_marked_edges Unmark all edges touching the input polygon as non-central. (Used to emulate existing literature)
      */
-    std::vector<std::list<ExtrusionLine>> generateToolpaths(const BeadingStrategy& beading_strategy, bool filter_outermost_marked_edges = false);
+    std::vector<std::list<ExtrusionLine>> generateToolpaths(bool filter_outermost_marked_edges = false);
 
 private:
 
@@ -81,7 +86,7 @@ private:
      * 
      * \param[out] segments the generated segments
      */
-    void generateSegments(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index, const BeadingStrategy& beading_strategy);
+    void generateSegments(std::vector<std::list<ExtrusionLine>>& result_polylines_per_index);
 
     /*!
      * Get the edge pointing to the node with the maximum distance_to_boundary
@@ -129,7 +134,7 @@ private:
      * \param node_to_beading mapping each node to a \ref BeadingPropagation
      * \param beading_strategy The beading strategy
      */
-    void propagateBeadingsUpward(std::vector<edge_t*>& upward_quad_mids, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, const BeadingStrategy& beading_strategy);
+    void propagateBeadingsUpward(std::vector<edge_t*>& upward_quad_mids, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
 
     /*!
      * propagate beading info from higher R nodes to lower R nodes
@@ -144,7 +149,7 @@ private:
      * \param node_to_beading mapping each node to a \ref BeadingPropagation
      * \param beading_strategy The beading strategy
      */
-    void propagateBeadingsDownward(std::vector<edge_t*>& upward_quad_mids, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, const BeadingStrategy& beading_strategy);
+    void propagateBeadingsDownward(std::vector<edge_t*>& upward_quad_mids, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
 
     /*!
      * propagate beading info from higher R nodes to lower R nodes
@@ -157,7 +162,7 @@ private:
      * \param node_to_beading mapping each node to a \ref BeadingPropagation
      * \param beading_strategy The beading strategy
      */
-    void propagateBeadingsDownward(edge_t* edge_to_peak, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, const BeadingStrategy& beading_strategy);
+    void propagateBeadingsDownward(edge_t* edge_to_peak, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
 
     /*!
      * Interpolate between the beading propagated from above and the one propagated from below.
@@ -186,7 +191,7 @@ private:
      * \param node_to_beading mapping each node to a \ref BeadingPropagation
      * \param beading_strategy The beading strategy
      */
-    BeadingPropagation& getBeading(node_t* node, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, const BeadingStrategy& beading_strategy);
+    BeadingPropagation& getBeading(node_t* node, std::unordered_map<node_t*, BeadingPropagation>& node_to_beading);
 
     /*!
      * In case we cannot find the beading of a node, get a beading from the nearest node
@@ -203,7 +208,7 @@ private:
      * \param[out] edge_to_junctions junctions ordered high R to low R
      * \param beading_strategy The beading strategy
      */
-    void generateJunctions(std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions, const BeadingStrategy& beading_strategy);
+    void generateJunctions(std::unordered_map<node_t*, BeadingPropagation>& node_to_beading, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);
 
     /*!
      * connect junctions in each quad
