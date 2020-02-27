@@ -249,7 +249,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
     {
         {
             STLwriter stl("output/st_bead_count.stl");
-            inset_generator.debugOutputSTL(stl, true);
+            inset_generator.st.debugOutputSTL(stl, true);
         }
         logAlways("Writing MAT STL took %fs\n", tk.restart());
     }
@@ -257,7 +257,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
     if (analyse)
     {
         Statistics stats(to_string(type), output_prefix, polys, processing_time);
-        stats.analyse(result_polygons_per_index, result_polylines_per_index, &inset_generator );
+        stats.analyse(result_polygons_per_index, result_polylines_per_index, &inset_generator);
         logAlways("Analysis took %fs\n", tk.restart());
         stats.saveResultsCSV();
         if (visualize)

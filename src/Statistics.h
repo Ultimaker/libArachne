@@ -9,7 +9,7 @@
 #include "utils/ExtrusionSegment.h"
 #include "utils/ExtrusionLine.h"
 #include "settings/types/Duration.h"
-#include "Arachne/SkeletalTrapezoidation.h"
+#include "Arachne/VariableWidthInsetGenerator.h"
 
 namespace arachne
 {
@@ -29,7 +29,7 @@ public:
         total_target_area = INT2MM2(input.area());
         total_target_area_length = INT2MM(input.polygonLength());
     }
-    void analyse(std::vector<std::list<ExtrusionLine>>& polygons_per_index, std::vector<std::list<ExtrusionLine>>& polylines_per_index, SkeletalTrapezoidation* st = nullptr);
+    void analyse(std::vector<std::list<ExtrusionLine>>& polygons_per_index, std::vector<std::list<ExtrusionLine>>& polylines_per_index, VariableWidthInsetGenerator* st = nullptr);
     void visualize(coord_t nozzle_size, bool output_st = true, bool output_toolpaths = false, bool output_widths = true, bool include_legend = false, bool output_accuracy = true, bool exaggerate_widths = false, bool rounded_visualization = true);
     static std::vector<ExtrusionSegment> generateAllSegments(std::vector<std::list<ExtrusionLine>>& polygons_per_index, std::vector<std::list<ExtrusionLine>>& polylines_per_index);
     void saveResultsCSV();
@@ -44,7 +44,7 @@ private:
     std::string test_type;
     std::string output_prefix;
     const Polygons& input;
-    SkeletalTrapezoidation* st;
+    VariableWidthInsetGenerator* st;
 
     std::vector<std::list<ExtrusionLine>>* polygons_per_index;
     std::vector<std::list<ExtrusionLine>>* polylines_per_index;

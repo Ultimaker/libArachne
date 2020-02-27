@@ -12,7 +12,7 @@
 namespace arachne
 {
 
-void Statistics::analyse(std::vector<std::list<ExtrusionLine>>& polygons_per_index, std::vector<std::list<ExtrusionLine>>& polylines_per_index, SkeletalTrapezoidation* st)
+void Statistics::analyse(std::vector<std::list<ExtrusionLine>>& polygons_per_index, std::vector<std::list<ExtrusionLine>>& polylines_per_index, VariableWidthInsetGenerator* st)
 {
     this->st = st;
     this->polygons_per_index = &polygons_per_index;
@@ -180,7 +180,7 @@ void Statistics::visualize(coord_t nozzle_size, bool output_st, bool output_tool
         std::ostringstream ss;
         ss << "output/" << output_prefix << "_" << test_type << "_after.svg";
         SVG svg(ss.str(), aabb);
-        st->debugOutput(svg, false, false, true);
+        st->st.debugOutput(svg, false, false, true);
         svg.writePolylines(paths, SVG::Color::BLACK, 2);
         
         if (false)
