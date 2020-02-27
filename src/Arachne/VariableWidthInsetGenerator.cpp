@@ -28,8 +28,10 @@ VariableWidthInsetGenerator::VariableWidthInsetGenerator(const Polygons& polys, 
 , coord_t transition_filter_dist
 , coord_t beading_propagation_transition_dist
 )
-: SkeletalTrapezoidation(polys, transitioning_angle, discretization_step_size)
+: st(polys, transitioning_angle, discretization_step_size)
 , polys(polys)
+, transitioning_angle(transitioning_angle)
+, discretization_step_size()
 , transition_filter_dist(transition_filter_dist)
 , beading_propagation_transition_dist(beading_propagation_transition_dist)
 {
@@ -37,7 +39,7 @@ VariableWidthInsetGenerator::VariableWidthInsetGenerator(const Polygons& polys, 
 
 std::vector<std::list<ExtrusionLine>> VariableWidthInsetGenerator::generateToolpaths(const BeadingStrategy& beading_strategy, bool filter_outermost_marked_edges)
 {
-    initialize_graph(); // generate graph
+    st.initialize_graph(); // generate st.graph
     
     setMarking(beading_strategy);
 

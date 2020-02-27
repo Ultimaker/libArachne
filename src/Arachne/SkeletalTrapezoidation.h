@@ -60,8 +60,6 @@ public:
 
     HalfEdgeGraph<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge> graph;
 
-protected:
-
     /*!
      * Compute the skeletal trapezoidation decomposition of the input shape.
      * 
@@ -76,6 +74,8 @@ protected:
      * We therefore collapse edges and their whole cells afterwards.
      */
     void initialize_graph();
+
+private:
 
     /*!
      * mapping each voronoi VD edge to the corresponding halfedge HE edge
