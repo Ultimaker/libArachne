@@ -59,7 +59,7 @@ void VariableWidthInsetGenerator::generateSegments(std::vector<std::list<Extrusi
     std::vector<edge_t*> upward_quad_mids;
     for (edge_t& edge : st.graph.edges)
     {
-        if (edge.prev && edge.next && isUpward(&edge))
+        if (edge.prev && edge.next && st.isUpward(&edge))
         {
             upward_quad_mids.emplace_back(&edge);
         }
@@ -72,8 +72,8 @@ void VariableWidthInsetGenerator::generateSegments(std::vector<std::list<Extrusi
                     && b->from->data.distance_to_boundary == b->to->data.distance_to_boundary)
                 {
                     coord_t max = std::numeric_limits<coord_t>::max();
-                    coord_t a_dist_from_up = std::min(distToGoUp(a).value_or(max), distToGoUp(a->twin).value_or(max)) - vSize(a->to->p - a->from->p);
-                    coord_t b_dist_from_up = std::min(distToGoUp(b).value_or(max), distToGoUp(b->twin).value_or(max)) - vSize(b->to->p - b->from->p);
+                    coord_t a_dist_from_up = std::min(st.distToGoUp(a).value_or(max), st.distToGoUp(a->twin).value_or(max)) - vSize(a->to->p - a->from->p);
+                    coord_t b_dist_from_up = std::min(st.distToGoUp(b).value_or(max), st.distToGoUp(b->twin).value_or(max)) - vSize(b->to->p - b->from->p);
                     return a_dist_from_up < b_dist_from_up;
                 }
                 else if (a->from->data.distance_to_boundary == a->to->data.distance_to_boundary)
@@ -620,8 +620,8 @@ void VariableWidthInsetGenerator::generateLocalMaximaSingleBeads(std::unordered_
         node_t* node = pair.first;
         Beading& beading = pair.second.beading;
         if (beading.bead_widths.size() % 2 == 1
-            && isLocalMaximum(*node, true)
-            && !isMarked(node)
+            && st.isLocalMaximum(*node, true)
+            && !st.isMarked(node)
         )
         {
             size_t inset_index = beading.bead_widths.size() / 2;
@@ -819,243 +819,5 @@ void VariableWidthInsetGenerator::debugOutput(STLwriter& stl, std::unordered_map
         stl.writeQuad(start_prev, start, end_prev, end);
     }
 }
-
-
-
-
-
-
-
-
-
-// TODO: remove code deuplication below!
-
-
-std::pair<VariableWidthInsetGenerator::edge_t*, VariableWidthInsetGenerator::edge_t*> VariableWidthInsetGenerator::insertRib(edge_t& edge, node_t* mid_node)
-{
-    st.debugCheckGraphConsistency();
-    edge_t* edge_before = edge.prev;
-    edge_t* edge_after = edge.next;
-    node_t* node_before = edge.from;
-    node_t* node_after = edge.to;
-    
-    Point p = mid_node->p;
-
-    std::pair<Point, Point> source_segment = getSource(edge);
-    Point px = LinearAlg2D::getClosestOnLineSegment(p, source_segment.first, source_segment.second);
-    coord_t dist = vSize(p - px);
-    assert(dist > 0);
-    mid_node->data.distance_to_boundary = dist;
-    mid_node->data.transition_ratio = 0; // both transition end should have rest = 0, because at the ends a whole number of beads fits without rest
-
-    st.graph.nodes.emplace_back(SkeletalTrapezoidationJoint(), px);
-    node_t* source_node = &st.graph.nodes.back();
-    source_node->data.distance_to_boundary = 0;
-
-    edge_t* first = &edge;
-    st.graph.edges.emplace_back(SkeletalTrapezoidationEdge());
-    edge_t* second = &st.graph.edges.back();
-    st.graph.edges.emplace_back(SkeletalTrapezoidationEdge(SkeletalTrapezoidationEdge::TRANSITION_END));
-    edge_t* outward_edge = &st.graph.edges.back();
-    st.graph.edges.emplace_back(SkeletalTrapezoidationEdge(SkeletalTrapezoidationEdge::TRANSITION_END));
-    edge_t* inward_edge = &st.graph.edges.back();
-
-    if (edge_before) edge_before->next = first;
-    first->next = outward_edge;
-    outward_edge->next = nullptr;
-    inward_edge->next = second;
-    second->next = edge_after;
-
-    if (edge_after) edge_after->prev = second;
-    second->prev = inward_edge;
-    inward_edge->prev = nullptr;
-    outward_edge->prev = first;
-    first->prev = edge_before;
-
-    first->to = mid_node;
-    outward_edge->to = source_node;
-    inward_edge->to = mid_node;
-    second->to = node_after;
-
-    first->from = node_before;
-    outward_edge->from = mid_node;
-    inward_edge->from = source_node;
-    second->from = mid_node;
-
-    node_before->some_edge = first;
-    mid_node->some_edge = outward_edge;
-    source_node->some_edge = inward_edge;
-    if (edge_after) node_after->some_edge = edge_after;
-
-    first->data.setMarked(true);
-    outward_edge->data.setMarked(false); // TODO verify this is always the case.
-    inward_edge->data.setMarked(false);
-    second->data.setMarked(true);
-
-    outward_edge->twin = inward_edge;
-    inward_edge->twin = outward_edge;
-
-    first->twin = nullptr; // we don't know these yet!
-    second->twin = nullptr;
-
-    assert(second->prev->from->data.distance_to_boundary == 0);
-
-    st.debugCheckGraphConsistency();
-
-    return std::make_pair(first, second);
-}
-std::pair<Point, Point> VariableWidthInsetGenerator::getSource(const edge_t& edge)
-{
-    const edge_t* from_edge;
-    for (from_edge = &edge; from_edge->prev; from_edge = from_edge->prev) {}
-    const edge_t* to_edge;
-    for (to_edge = &edge; to_edge->next; to_edge = to_edge->next) {}
-    return std::make_pair(from_edge->from->p, to_edge->to->p);
-}
-
-bool VariableWidthInsetGenerator::isEndOfMarking(const edge_t& edge_to) const
-{
-    if (!edge_to.data.isMarked())
-    {
-        return false;
-    }
-    if (!edge_to.next)
-    {
-        return true;
-    }
-    for (const edge_t* edge = edge_to.next; edge && edge != edge_to.twin; edge = edge->twin->next)
-    {
-        if (edge->data.isMarked())
-        {
-            return false;
-        }
-        assert(edge->twin);
-    }
-    return true;
-}
-
-bool VariableWidthInsetGenerator::isLocalMaximum(const node_t& node, bool strict) const
-{
-    if (node.data.distance_to_boundary == 0)
-    {
-        return false;
-    }
-    bool first = true;
-    for (edge_t* edge = node.some_edge; first || edge != node.some_edge; edge = edge->twin->next)
-    {
-        if (canGoUp(edge, strict))
-        {
-            return false;
-        }
-        first = false;
-        assert(edge->twin); if (!edge->twin) return false;
-        if (!edge->twin->next)
-        { // This point is on the boundary
-            return false;
-        }
-    }
-    return true;
-}
-
-bool VariableWidthInsetGenerator::canGoUp(const edge_t* edge, bool strict) const
-{
-    if (edge->to->data.distance_to_boundary > edge->from->data.distance_to_boundary)
-    {
-        return true;
-    }
-    if (edge->to->data.distance_to_boundary < edge->from->data.distance_to_boundary
-        || strict
-    )
-    {
-        return false;
-    }
-    // edge is between equidistqant verts; recurse!
-    for (edge_t* outgoing = edge->next; outgoing != edge->twin; outgoing = outgoing->twin->next)
-    {
-        if (canGoUp(outgoing))
-        {
-            return true;
-        }
-        assert(outgoing->twin); if (!outgoing->twin) return false;
-        assert(outgoing->twin->next); if (!outgoing->twin->next) return true; // This point is on the boundary?! Should never occur
-    }
-    return false;
-}
-
-std::optional<coord_t> VariableWidthInsetGenerator::distToGoUp(const edge_t* edge) const
-{
-    if (edge->to->data.distance_to_boundary > edge->from->data.distance_to_boundary)
-    {
-        return 0;
-    }
-    if (edge->to->data.distance_to_boundary < edge->from->data.distance_to_boundary)
-    {
-        return std::optional<coord_t>();
-    }
-    // edge is between equidistqant verts; recurse!
-    std::optional<coord_t> ret;
-    for (edge_t* outgoing = edge->next; outgoing != edge->twin; outgoing = outgoing->twin->next)
-    {
-        std::optional<coord_t> dist_to_up = distToGoUp(outgoing);
-        if (dist_to_up)
-        {
-            if (ret)
-            {
-                ret = std::min(*ret, *dist_to_up);
-            }
-            else
-            {
-                ret = dist_to_up;
-            }
-        }
-        assert(outgoing->twin); if (!outgoing->twin) return std::optional<coord_t>();
-        assert(outgoing->twin->next); if (!outgoing->twin->next) return 0; // This point is on the boundary?! Should never occur
-    }
-    if (ret)
-    {
-        ret =  *ret + vSize(edge->to->p - edge->from->p);
-    }
-    return ret;
-}
-
-bool VariableWidthInsetGenerator::isUpward(const edge_t* edge) const
-{
-    if (edge->to->data.distance_to_boundary > edge->from->data.distance_to_boundary)
-    {
-        return true;
-    }
-    if (edge->to->data.distance_to_boundary < edge->from->data.distance_to_boundary)
-    {
-        return false;
-    }
-    // equidistant edge case:
-    std::optional<coord_t> forward_up_dist = distToGoUp(edge);
-    std::optional<coord_t> backward_up_dist = distToGoUp(edge->twin);
-    if (forward_up_dist && backward_up_dist)
-    {
-        return forward_up_dist < backward_up_dist;
-    }
-    if (forward_up_dist) return true;
-    if (backward_up_dist) return false;
-    return edge->to->p < edge->from->p; // arbitrary ordering, which returns the opposite for the twin edge
-}
-
-bool VariableWidthInsetGenerator::isMarked(const node_t* node) const
-{
-    bool first = true;
-    for (edge_t* edge = node->some_edge; first || edge != node->some_edge; edge = edge->twin->next)
-    {
-        if (edge->data.isMarked())
-        {
-            return true;
-        }
-        first = false;
-        assert(edge->twin); if (!edge->twin) return false;
-    }
-    return false;
-}
-
-
-
 
 } // namespace arachne

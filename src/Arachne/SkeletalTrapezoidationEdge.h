@@ -8,6 +8,8 @@
 namespace arachne
 {
 
+class SkeletalTrapezoidationJoint;
+
 class SkeletalTrapezoidationEdge
 {
 public:

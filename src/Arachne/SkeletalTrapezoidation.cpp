@@ -738,6 +738,139 @@ void SkeletalTrapezoidation::fixNodeDuplication()
 //
 
 
+bool SkeletalTrapezoidation::isLocalMaximum(const node_t& node, bool strict) const
+{
+    if (node.data.distance_to_boundary == 0)
+    {
+        return false;
+    }
+    bool first = true;
+    for (edge_t* edge = node.some_edge; first || edge != node.some_edge; edge = edge->twin->next)
+    {
+        if (canGoUp(edge, strict))
+        {
+            return false;
+        }
+        first = false;
+        assert(edge->twin); if (!edge->twin) return false;
+        if (!edge->twin->next)
+        { // This point is on the boundary
+            return false;
+        }
+    }
+    return true;
+}
+
+bool SkeletalTrapezoidation::canGoUp(const edge_t* edge, bool strict) const
+{
+    if (edge->to->data.distance_to_boundary > edge->from->data.distance_to_boundary)
+    {
+        return true;
+    }
+    if (edge->to->data.distance_to_boundary < edge->from->data.distance_to_boundary
+        || strict
+    )
+    {
+        return false;
+    }
+    // edge is between equidistqant verts; recurse!
+    for (edge_t* outgoing = edge->next; outgoing != edge->twin; outgoing = outgoing->twin->next)
+    {
+        if (canGoUp(outgoing))
+        {
+            return true;
+        }
+        assert(outgoing->twin); if (!outgoing->twin) return false;
+        assert(outgoing->twin->next); if (!outgoing->twin->next) return true; // This point is on the boundary?! Should never occur
+    }
+    return false;
+}
+
+std::optional<coord_t> SkeletalTrapezoidation::distToGoUp(const edge_t* edge) const
+{
+    if (edge->to->data.distance_to_boundary > edge->from->data.distance_to_boundary)
+    {
+        return 0;
+    }
+    if (edge->to->data.distance_to_boundary < edge->from->data.distance_to_boundary)
+    {
+        return std::optional<coord_t>();
+    }
+    // edge is between equidistqant verts; recurse!
+    std::optional<coord_t> ret;
+    for (edge_t* outgoing = edge->next; outgoing != edge->twin; outgoing = outgoing->twin->next)
+    {
+        std::optional<coord_t> dist_to_up = distToGoUp(outgoing);
+        if (dist_to_up)
+        {
+            if (ret)
+            {
+                ret = std::min(*ret, *dist_to_up);
+            }
+            else
+            {
+                ret = dist_to_up;
+            }
+        }
+        assert(outgoing->twin); if (!outgoing->twin) return std::optional<coord_t>();
+        assert(outgoing->twin->next); if (!outgoing->twin->next) return 0; // This point is on the boundary?! Should never occur
+    }
+    if (ret)
+    {
+        ret =  *ret + vSize(edge->to->p - edge->from->p);
+    }
+    return ret;
+}
+
+bool SkeletalTrapezoidation::isUpward(const edge_t* edge) const
+{
+    if (edge->to->data.distance_to_boundary > edge->from->data.distance_to_boundary)
+    {
+        return true;
+    }
+    if (edge->to->data.distance_to_boundary < edge->from->data.distance_to_boundary)
+    {
+        return false;
+    }
+    // equidistant edge case:
+    std::optional<coord_t> forward_up_dist = distToGoUp(edge);
+    std::optional<coord_t> backward_up_dist = distToGoUp(edge->twin);
+    if (forward_up_dist && backward_up_dist)
+    {
+        return forward_up_dist < backward_up_dist;
+    }
+    if (forward_up_dist) return true;
+    if (backward_up_dist) return false;
+    return edge->to->p < edge->from->p; // arbitrary ordering, which returns the opposite for the twin edge
+}
+
+bool SkeletalTrapezoidation::isMarked(const node_t* node) const
+{
+    bool first = true;
+    for (edge_t* edge = node->some_edge; first || edge != node->some_edge; edge = edge->twin->next)
+    {
+        if (edge->data.isMarked())
+        {
+            return true;
+        }
+        first = false;
+        assert(edge->twin); if (!edge->twin) return false;
+    }
+    return false;
+}
+
+
+//
+// ^^^^^^^^^^^^^^^^^^^^^
+//       HELPERS
+// =====================
+//
+// =====================
+//        DEBUG
+// vvvvvvvvvvvvvvvvvvvvv
+//
+
+
 void SkeletalTrapezoidation::debugCheckGraphCompleteness()
 {
 #ifdef DEBUG

@@ -235,50 +235,6 @@ private:
     
     // ^ toolpath generation | v helpers
 
-    // TODO: remove duplicate helper functions!!
-
-    /*!
-     * Return the first and last edge of the edges replacing \p edge pointing to the same node
-     */
-    std::pair<edge_t*, edge_t*> insertRib(edge_t& edge, node_t* mid_node);
-
-    std::pair<Point, Point> getSource(const edge_t& edge);
-    bool isEndOfMarking(const edge_t& edge) const;
-
-    /*!
-     * Check whether this node has a locally maximal distance_to_boundary
-     * 
-     * \param strict Whether equidistant edges can count as a local maximum
-     */
-    bool isLocalMaximum(const node_t& node, bool strict = false) const;
-
-    /*!
-     * Check (recursively) whether there is any upward edge from the distance_to_boundary of the from of the \param edge
-     * 
-     * \param strict Whether equidistant edges can count as a local maximum
-     */
-    bool canGoUp(const edge_t* edge, bool strict = false) const;
-
-    /*!
-     * Calculate the traversed distance until we meet an upward edge.
-     * Useful for calling on edges between equidistant points.
-     * 
-     * If we can go up then the distance includes the length of the \param edge
-     */
-    std::optional<coord_t> distToGoUp(const edge_t* edge) const;
-
-    /*!
-     * Check whether the edge goes from a lower to a higher distance_to_boundary.
-     * Effectively deals with equidistant edges by looking beyond this edge.
-     * 
-     * // TODO: remove this function
-     */
-    bool isUpward(const edge_t* edge) const;
-
-    /*!
-     * Whether the node is connected to any marked edge
-     */
-    bool isMarked(const node_t* node) const;
 public:
     void debugCheckDecorationConsistency(bool transitioned); //!< Check logical relationships relting to distance_to_boundary and is_marked etc. Should be true anywhere after setMarking(.)
     void debugOutput(SVG& svg, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions);

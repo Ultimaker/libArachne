@@ -170,6 +170,46 @@ private:
     void fixNodeDuplication();
 
 public:
+    // helper functions
+    
+    /*!
+     * Check whether this node has a locally maximal distance_to_boundary
+     * 
+     * \param strict Whether equidistant edges can count as a local maximum
+     */
+    bool isLocalMaximum(const node_t& node, bool strict = false) const;
+
+    /*!
+     * Check (recursively) whether there is any upward edge from the distance_to_boundary of the from of the \param edge
+     * 
+     * \param strict Whether equidistant edges can count as a local maximum
+     */
+    bool canGoUp(const edge_t* edge, bool strict = false) const;
+
+    /*!
+     * Calculate the traversed distance until we meet an upward edge.
+     * Useful for calling on edges between equidistant points.
+     * 
+     * If we can go up then the distance includes the length of the \param edge
+     */
+    std::optional<coord_t> distToGoUp(const edge_t* edge) const;
+
+    /*!
+     * Check whether the edge goes from a lower to a higher distance_to_boundary.
+     * Effectively deals with equidistant edges by looking beyond this edge.
+     * 
+     * // TODO: remove this function
+     */
+    bool isUpward(const edge_t* edge) const;
+
+    /*!
+     * Whether the node is connected to any marked edge
+     */
+    bool isMarked(const node_t* node) const;
+    
+    
+    
+    // debugging
     void debugCheckGraphCompleteness(); //!< Checks whether all member fields of edges and nodes are filled. Should be true after initialization.
     void debugCheckEndpointUniqueness(); //!< Checks whether the end points of qauds have unique verts. Should be true after separatePointyQuadEndNodes().
     void debugCheckGraphExistance(); //!< Checks whether all member fields of edges and nodes are existing nodes/edges recorded in graph.nodes and graph.edges. Should be true after any graph update.
