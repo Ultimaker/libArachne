@@ -41,7 +41,7 @@ enum class StrategyType
 
 StrategyType toStrategyType(char c);
 
-std::string to_string(StrategyType type);
+std::string toString(StrategyType type);
 
 class BeadingStrategyHelper
 {

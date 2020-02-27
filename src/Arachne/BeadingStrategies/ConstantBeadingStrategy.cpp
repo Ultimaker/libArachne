@@ -28,12 +28,12 @@ ConstantBeadingStrategy::Beading ConstantBeadingStrategy::compute(coord_t thickn
     return ret;
 }
 
-coord_t ConstantBeadingStrategy::optimal_thickness(coord_t bead_count) const
+coord_t ConstantBeadingStrategy::optimalThickness(coord_t bead_count) const
 {
     return bead_count * optimal_width;
 }
 
-coord_t ConstantBeadingStrategy::transition_thickness(coord_t lower_bead_count) const
+coord_t ConstantBeadingStrategy::transitionThickness(coord_t lower_bead_count) const
 {
     if (lower_bead_count < bead_count)
     {
@@ -45,7 +45,7 @@ coord_t ConstantBeadingStrategy::transition_thickness(coord_t lower_bead_count) 
     }
 }
 
-coord_t ConstantBeadingStrategy::optimal_bead_count(coord_t thickness) const
+coord_t ConstantBeadingStrategy::optimalBeadCount(coord_t thickness) const
 {
     return bead_count;
 }

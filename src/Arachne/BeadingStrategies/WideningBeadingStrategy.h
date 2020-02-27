@@ -33,9 +33,9 @@ public:
         if (parent) delete parent;
     }
     virtual Beading compute(coord_t thickness, coord_t bead_count) const override;
-    virtual coord_t optimal_thickness(coord_t bead_count) const override;
-    virtual coord_t transition_thickness(coord_t lower_bead_count) const override;
-    virtual coord_t optimal_bead_count(coord_t thickness) const override;
+    virtual coord_t optimalThickness(coord_t bead_count) const override;
+    virtual coord_t transitionThickness(coord_t lower_bead_count) const override;
+    virtual coord_t optimalBeadCount(coord_t thickness) const override;
     virtual coord_t getTransitioningLength(coord_t lower_bead_count) const override;
     virtual float getTransitionAnchorPos(coord_t lower_bead_count) const override;
     virtual std::vector<coord_t> getNonlinearThicknesses(coord_t lower_bead_count) const override;

@@ -35,7 +35,7 @@ StrategyType toStrategyType(char c)
     return StrategyType::COUNT;
 }
 
-std::string to_string(StrategyType type)
+std::string toString(StrategyType type)
 {
     switch (type)
     {

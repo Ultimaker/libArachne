@@ -177,7 +177,7 @@ bool readCommandLine(int argc, char **argv)
 
 void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, StrategyType type, bool generate_gcodes = true, bool analyse = false, bool generate_MAT_STL = false)
 {
-    std::string type_str = to_string(type);
+    std::string type_str = toString(type);
     logAlways(">> Performing %s strategy...\n", type_str.c_str());
 
     BeadingStrategy* beading_strategy = BeadingStrategyHelper::makeStrategy(type, nozzle_size, transitioning_angle, min_bead_width, min_feature_size);
@@ -217,7 +217,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
         AABB aabb(polys);
         {
             std::ostringstream ss;
-            ss << "output/" << output_prefix << "_" << to_string(type) << "_arachne_P3.gcode";
+            ss << "output/" << output_prefix << "_" << toString(type) << "_arachne_P3.gcode";
             GcodeWriter gcode(ss.str(), GcodeWriter::type_P3);
             gcode.printBrim(aabb, 3, nozzle_size, nozzle_size * 1.5);
             gcode.resetPrintTime();
@@ -227,12 +227,12 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
 //         if (false)
         {
             std::ostringstream ss;
-            ss << "output/" << output_prefix << "_" << to_string(type) << "_arachne_UM3.gcode";
+            ss << "output/" << output_prefix << "_" << toString(type) << "_arachne_UM3.gcode";
             GcodeWriter gcode(ss.str(), GcodeWriter::type_UM3);
             gcode.printBrim(aabb, 3, nozzle_size, nozzle_size * 1.5);
             gcode.resetPrintTime();
             gcode.print(result_polygons_per_index, result_polylines_per_index, aabb);
-            Statistics stats(to_string(type), output_prefix, polys, processing_time);
+            Statistics stats(toString(type), output_prefix, polys, processing_time);
             stats.savePrintTimeCSV(gcode.getPrintTime());
             logAlways("Writing gcode took %fs\n", tk.restart());
         }
@@ -240,7 +240,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
     if (generate_toolpaths)
     {
         std::ostringstream ss;
-        ss << "output/" << output_prefix << "_" << to_string(type) << "_toolpaths.txt";
+        ss << "output/" << output_prefix << "_" << toString(type) << "_toolpaths.txt";
         ToolpathWriter toolpather(ss.str());
         toolpather.write(result_polygons_per_index, result_polylines_per_index);
     }
@@ -256,7 +256,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
 
     if (analyse)
     {
-        Statistics stats(to_string(type), output_prefix, polys, processing_time);
+        Statistics stats(toString(type), output_prefix, polys, processing_time);
         stats.analyse(result_polygons_per_index, result_polylines_per_index, &inset_generator);
         logAlways("Analysis took %fs\n", tk.restart());
         stats.saveResultsCSV();
@@ -273,7 +273,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
         bool rounded_visualization = true;
         {
             std::ostringstream ss;
-            ss << "output/" << output_prefix << "_" << to_string(type) << "_viz.svg";
+            ss << "output/" << output_prefix << "_" << toString(type) << "_viz.svg";
             SVG svg(ss.str(), aabb);
             ToolpathVisualizer viz(svg);
             viz.outline(polys);
@@ -284,7 +284,7 @@ void test(Polygons& polys, coord_t nozzle_size, std::string output_prefix, Strat
         if (output_widths)
         {
             std::ostringstream ss;
-            ss << "output/" << output_prefix << "_" << to_string(type) << "_widths.svg";
+            ss << "output/" << output_prefix << "_" << toString(type) << "_widths.svg";
             SVG svg(ss.str(), aabb);
             ToolpathVisualizer viz(svg);
             viz.outline(polys);
@@ -474,7 +474,7 @@ void test(std::string input_outline_filename, std::string output_prefix)
     if (false && output_prefix.compare("TEST") != 0)
     {
         std::ostringstream ss;
-        ss << "output/" << output_prefix << "_" << to_string(StrategyType::InwardDistributed) << "_results.csv";
+        ss << "output/" << output_prefix << "_" << toString(StrategyType::InwardDistributed) << "_results.csv";
         std::ifstream file(ss.str().c_str());
         if (file.good())
         {

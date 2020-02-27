@@ -14,7 +14,7 @@ LimitedBeadingStrategy::Beading LimitedBeadingStrategy::compute(coord_t thicknes
     }
     assert(bead_count == max_bead_count + 1);
 
-    coord_t optimal_thickness = parent->optimal_thickness(max_bead_count);
+    coord_t optimal_thickness = parent->optimalThickness(max_bead_count);
     Beading ret = parent->compute(optimal_thickness, max_bead_count);
     ret.left_over += thickness - ret.total_thickness;
     ret.total_thickness = thickness;
@@ -32,38 +32,38 @@ LimitedBeadingStrategy::Beading LimitedBeadingStrategy::compute(coord_t thicknes
     return ret;
 }
 
-coord_t LimitedBeadingStrategy::optimal_thickness(coord_t bead_count) const
+coord_t LimitedBeadingStrategy::optimalThickness(coord_t bead_count) const
 {
     if (bead_count <= max_bead_count)
     {
-        return parent->optimal_thickness(bead_count);
+        return parent->optimalThickness(bead_count);
     }
     return 10000000; // 10 meter
 }
 
-coord_t LimitedBeadingStrategy::transition_thickness(coord_t lower_bead_count) const
+coord_t LimitedBeadingStrategy::transitionThickness(coord_t lower_bead_count) const
 {
     if (lower_bead_count < max_bead_count)
     {
-        return parent->transition_thickness(lower_bead_count);
+        return parent->transitionThickness(lower_bead_count);
     }
     if (lower_bead_count == max_bead_count)
     {
-        return parent->optimal_thickness(lower_bead_count + 1) - 10;
+        return parent->optimalThickness(lower_bead_count + 1) - 10;
     }
     return 9000000; // 9 meter
 }
 
-coord_t LimitedBeadingStrategy::optimal_bead_count(coord_t thickness) const
+coord_t LimitedBeadingStrategy::optimalBeadCount(coord_t thickness) const
 {
-    coord_t parent_bead_count = parent->optimal_bead_count(thickness);
+    coord_t parent_bead_count = parent->optimalBeadCount(thickness);
     if (parent_bead_count <= max_bead_count)
     {
-        return parent->optimal_bead_count(thickness);
+        return parent->optimalBeadCount(thickness);
     }
     else if (parent_bead_count == max_bead_count + 1)
     {
-        if (thickness < parent->optimal_thickness(max_bead_count + 1) - 10)
+        if (thickness < parent->optimalThickness(max_bead_count + 1) - 10)
             return max_bead_count;
         else 
             return max_bead_count + 1;

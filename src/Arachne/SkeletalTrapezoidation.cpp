@@ -25,7 +25,7 @@ namespace arachne
 
 bool generate_MAT_STL = false;
 
-SkeletalTrapezoidation::node_t& SkeletalTrapezoidation::make_node(vd_t::vertex_type& vd_node, Point p)
+SkeletalTrapezoidation::node_t& SkeletalTrapezoidation::makeNode(vd_t::vertex_type& vd_node, Point p)
 {
     auto he_node_it = vd_node_to_he_node.find(&vd_node);
     if (he_node_it == vd_node_to_he_node.end())
@@ -41,7 +41,7 @@ SkeletalTrapezoidation::node_t& SkeletalTrapezoidation::make_node(vd_t::vertex_t
     }
 }
 
-void SkeletalTrapezoidation::transfer_edge(Point from, Point to, vd_t::edge_type& vd_edge, edge_t*& prev_edge, Point& start_source_point, Point& end_source_point, const std::vector<Point>& points, const std::vector<Segment>& segments)
+void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type& vd_edge, edge_t*& prev_edge, Point& start_source_point, Point& end_source_point, const std::vector<Point>& points, const std::vector<Segment>& segments)
 {
     auto he_edge_it = vd_edge_to_he_edge.find(vd_edge.twin());
     if (he_edge_it != vd_edge_to_he_edge.end())
@@ -85,7 +85,7 @@ void SkeletalTrapezoidation::transfer_edge(Point from, Point to, vd_t::edge_type
             assert(twin->prev); // forth rib
             assert(twin->prev->twin); // back rib
             assert(twin->prev->twin->prev); // prev segment along parabola
-            make_rib(prev_edge, start_source_point, end_source_point);
+            makeRib(prev_edge, start_source_point, end_source_point);
         }
         assert(prev_edge);
     }
@@ -95,8 +95,8 @@ void SkeletalTrapezoidation::transfer_edge(Point from, Point to, vd_t::edge_type
         assert(discretized.size() >= 2);
         
         assert(!prev_edge || prev_edge->to);
-//         assert(!prev_edge || prev_edge->to == &make_node(*vd_edge.vertex0(), from)); // TODO: investigate whether boost:voronoi can produce multiple verts and violates consistency
-        node_t* v0 = (prev_edge)? prev_edge->to : &make_node(*vd_edge.vertex0(), from);
+//         assert(!prev_edge || prev_edge->to == &makeNode(*vd_edge.vertex0(), from)); // TODO: investigate whether boost:voronoi can produce multiple verts and violates consistency
+        node_t* v0 = (prev_edge)? prev_edge->to : &makeNode(*vd_edge.vertex0(), from);
         Point p0 = discretized.front();
         for (size_t p1_idx = 1; p1_idx < discretized.size(); p1_idx++)
         {
@@ -109,7 +109,7 @@ void SkeletalTrapezoidation::transfer_edge(Point from, Point to, vd_t::edge_type
             }
             else
             {
-                v1 = &make_node(*vd_edge.vertex1(), to);
+                v1 = &makeNode(*vd_edge.vertex1(), to);
             }
 
             graph.edges.emplace_front(SkeletalTrapezoidationEdge());
@@ -131,7 +131,7 @@ void SkeletalTrapezoidation::transfer_edge(Point from, Point to, vd_t::edge_type
             
             if (p1_idx < discretized.size() - 1)
             { // rib for last segment gets introduced outside this function!
-                make_rib(prev_edge, start_source_point, end_source_point);
+                makeRib(prev_edge, start_source_point, end_source_point);
             }
         }
         assert(prev_edge);
@@ -139,7 +139,7 @@ void SkeletalTrapezoidation::transfer_edge(Point from, Point to, vd_t::edge_type
     }
 }
 
-void SkeletalTrapezoidation::make_rib(edge_t*& prev_edge, Point start_source_point, Point end_source_point)
+void SkeletalTrapezoidation::makeRib(edge_t*& prev_edge, Point start_source_point, Point end_source_point)
 {
     Point p = LinearAlg2D::getClosestOnLineSegment(prev_edge->to->p, start_source_point, end_source_point);
     coord_t dist = vSize(prev_edge->to->p - p);
@@ -444,24 +444,24 @@ void SkeletalTrapezoidation::initializeGraph()
         // copy start to end edge to graph
         
         edge_t* prev_edge = nullptr;
-        transfer_edge(start_source_point, VoronoiUtils::p(starting_vd_edge->vertex1()), *starting_vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
+        transferEdge(start_source_point, VoronoiUtils::p(starting_vd_edge->vertex1()), *starting_vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
         node_t* starting_node = vd_node_to_he_node[starting_vd_edge->vertex0()];
         starting_node->data.distance_to_boundary = 0;
         // starting_edge->prev = nullptr;
 //         starting_edge->from->data.distance_to_boundary = 0; // TODO
 
-        make_rib(prev_edge, start_source_point, end_source_point);
+        makeRib(prev_edge, start_source_point, end_source_point);
         for (vd_t::edge_type* vd_edge = starting_vd_edge->next(); vd_edge != ending_vd_edge; vd_edge = vd_edge->next())
         {
             assert(vd_edge->is_finite());
             Point v1 = VoronoiUtils::p(vd_edge->vertex0());
             Point v2 = VoronoiUtils::p(vd_edge->vertex1());
-            transfer_edge(v1, v2, *vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
+            transferEdge(v1, v2, *vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
 
-            make_rib(prev_edge, start_source_point, end_source_point);
+            makeRib(prev_edge, start_source_point, end_source_point);
         }
 
-        transfer_edge(VoronoiUtils::p(ending_vd_edge->vertex0()), end_source_point, *ending_vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
+        transferEdge(VoronoiUtils::p(ending_vd_edge->vertex0()), end_source_point, *ending_vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
         // ending_edge->next = nullptr;
         prev_edge->to->data.distance_to_boundary = 0;
 

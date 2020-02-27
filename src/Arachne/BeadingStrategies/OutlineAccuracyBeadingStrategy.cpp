@@ -75,14 +75,14 @@ OutlineAccuracyBeadingStrategy::Beading OutlineAccuracyBeadingStrategy::compute(
     return ret;
 }
 
-coord_t OutlineAccuracyBeadingStrategy::optimal_thickness(coord_t bead_count) const
+coord_t OutlineAccuracyBeadingStrategy::optimalThickness(coord_t bead_count) const
 {
     if (bead_count <= 0) return 0;
     if (bead_count <= 2) return bead_count * optimal_outer_width;
     return optimal_outer_width * 2 + (bead_count - 2) * optimal_width;
 }
 
-coord_t OutlineAccuracyBeadingStrategy::transition_thickness(coord_t lower_bead_count) const
+coord_t OutlineAccuracyBeadingStrategy::transitionThickness(coord_t lower_bead_count) const
 {
     if (lower_bead_count == 0) return min_width;
     if (lower_bead_count == 1) return 2 * min_width;
@@ -92,7 +92,7 @@ coord_t OutlineAccuracyBeadingStrategy::transition_thickness(coord_t lower_bead_
     return normal_transition_thickness;
 }
 
-coord_t OutlineAccuracyBeadingStrategy::optimal_bead_count(coord_t thickness) const
+coord_t OutlineAccuracyBeadingStrategy::optimalBeadCount(coord_t thickness) const
 {
     if (thickness < min_width) return 0;
     if (thickness < 2 * min_width) return 1;
