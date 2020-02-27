@@ -378,7 +378,7 @@ void SkeletalTrapezoidation::computeSegmentCellRange(vd_t::cell_type& cell, Poin
     end_source_point = source_segment.from();
 }
 
-void SkeletalTrapezoidation::initialize_graph()
+void SkeletalTrapezoidation::initializeGraph()
 {
     std::vector<Point> points; // remains empty
 

@@ -73,7 +73,7 @@ public:
      * Another complication arises because the VD uses floating logic, which can result in zero-length segments after rounding to integers.
      * We therefore collapse edges and their whole cells afterwards.
      */
-    void initialize_graph();
+    void initializeGraph();
 
 private:
 

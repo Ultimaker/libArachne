@@ -45,7 +45,7 @@ const Polygons& polys
 
 std::vector<std::list<ExtrusionLine>> VariableWidthInsetGenerator::generateToolpaths(bool filter_outermost_marked_edges)
 {
-    st.initialize_graph(); // generate st.graph
+    st.initializeGraph(); // generate st.graph
     
     TrapezoidationQuantizer quantizer(st, beading_strategy, polys, transitioning_angle, discretization_step_size, transition_filter_dist);
     quantizer.applyBeadCounts(filter_outermost_marked_edges);
