@@ -236,6 +236,7 @@ private:
 public:
     void debugCheckDecorationConsistency(bool transitioned); //!< Check logical relationships relting to distance_to_boundary and is_marked etc. Should be true anywhere after setMarking(.)
     void debugOutput(SVG& svg);
+    void debugOutputJunctions(SVG& svg);
     void debugOutput(STLwriter& stl);
 protected:
     SVG::ColorObject getColor(edge_t& edge);

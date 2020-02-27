@@ -129,7 +129,7 @@ void VariableWidthInsetGenerator::generateSegments()
     {
         SVG svg("output/junctions.svg", AABB(polys));
         st.debugOutput(svg, false, false, true, false);
-        debugOutput(svg);
+        debugOutputJunctions(svg);
     }
     if (generate_MAT_STL)
     {
@@ -706,6 +706,27 @@ void VariableWidthInsetGenerator::debugOutput(SVG& svg)
         for (ExtrusionJunction& junction : pair.second)
             svg.writePoint(junction.p, false, 2, SVG::Color::YELLOW);
 }
+
+
+void VariableWidthInsetGenerator::debugOutputJunctions(SVG& svg)
+{
+    for (auto& pair : edge_to_junctions)
+        for (ExtrusionJunction& junction : pair.second)
+        {
+            svg.writePoint(junction.p, false, svg.getScale() * junction.w / 2, SVG::Color::BLACK);
+            
+            for (double w = .95; w > .25; w = 1.0 - (1.0 - w) * 1.2)
+            {
+                int c = std::min(255.0, 255 - 300 * w);
+                SVG::ColorObject clr(c, c, c);
+                svg.writePoint(junction.p, false, svg.getScale() * junction.w / 2 * w, clr);
+            }
+        }
+    for (auto& pair : edge_to_junctions)
+        for (ExtrusionJunction& junction : pair.second)
+            svg.writePoint(junction.p, false, 2, SVG::Color::YELLOW);
+}
+
 
 void VariableWidthInsetGenerator::debugOutput(STLwriter& stl)
 {

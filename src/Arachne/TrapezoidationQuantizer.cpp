@@ -305,7 +305,7 @@ void TrapezoidationQuantizer::generateTransitioningRibs()
     {
         SVG svg("output/transition_mids_unfiltered.svg", AABB(polys));
         st.debugOutput(svg, false, false, true, false);
-        debugOutput(svg, &edge_to_transition_mids);
+        debugOutput(svg);
     }
 #endif
 
@@ -315,11 +315,11 @@ void TrapezoidationQuantizer::generateTransitioningRibs()
     {
         SVG svg("output/transition_mids.svg", AABB(polys));
         st.debugOutput(svg, false, false, true, false);
-        debugOutput(svg, &edge_to_transition_mids);
+        debugOutput(svg);
     }
 #endif
 
-    debugCheckTransitionMids(edge_to_transition_mids);
+    debugCheckTransitionMids();
 
     generateTransitionEnds();
 
@@ -327,7 +327,7 @@ void TrapezoidationQuantizer::generateTransitioningRibs()
     {
         SVG svg("output/transition_ends.svg", AABB(polys));
         st.debugOutput(svg, false, false, true, false);
-        debugOutput(svg, &edge_to_transition_mids, &edge_to_transition_ends);
+        debugOutput(svg);
     }
 #endif
 
@@ -1096,7 +1096,7 @@ void TrapezoidationQuantizer::debugCheckDecorationConsistency(bool transitioned)
 #endif // DEBUG
 }
 
-void TrapezoidationQuantizer::debugCheckTransitionMids(const std::unordered_map<edge_t*, std::list<TransitionMiddle>>& edge_to_transition_mids) const
+void TrapezoidationQuantizer::debugCheckTransitionMids() const
 {
 #ifdef DEBUG
     for (std::pair<edge_t*, std::list<TransitionMiddle>> pair : edge_to_transition_mids)
@@ -1135,16 +1135,16 @@ SVG::ColorObject TrapezoidationQuantizer::getColor(edge_t& edge)
     }
 }
 
-void TrapezoidationQuantizer::debugOutput(SVG& svg, std::unordered_map<edge_t*, std::list<TransitionMiddle>>* edge_to_transition_mids, std::unordered_map<edge_t*, std::list<TransitionEnd>>* edge_to_transition_ends)
+void TrapezoidationQuantizer::debugOutput(SVG& svg)
 {
     coord_t font_size = 20;
     SVG::ColorObject up_clr(255, 0, 150);
     SVG::ColorObject mid_clr(150, 0, 150);
     SVG::ColorObject down_clr(150, 0, 255);
 
-    if (edge_to_transition_mids)
+    if ( ! edge_to_transition_mids.empty())
     {
-        for (auto& pair : *edge_to_transition_mids)
+        for (auto& pair : edge_to_transition_mids)
         {
             edge_t* edge = pair.first;
             Point a = edge->from->p;
@@ -1161,9 +1161,9 @@ void TrapezoidationQuantizer::debugOutput(SVG& svg, std::unordered_map<edge_t*, 
             }
         }
     }
-    if (edge_to_transition_ends)
+    if ( ! edge_to_transition_ends.empty())
     {
-        for (auto& pair : *edge_to_transition_ends)
+        for (auto& pair : edge_to_transition_ends)
         {
             edge_t* edge = pair.first;
             Point a = edge->from->p;
@@ -1182,25 +1182,6 @@ void TrapezoidationQuantizer::debugOutput(SVG& svg, std::unordered_map<edge_t*, 
             }
         }
     }
-}
-
-void TrapezoidationQuantizer::debugOutput(SVG& svg, std::unordered_map<edge_t*, std::vector<ExtrusionJunction>>& edge_to_junctions)
-{
-    for (auto& pair : edge_to_junctions)
-        for (ExtrusionJunction& junction : pair.second)
-        {
-            svg.writePoint(junction.p, false, svg.getScale() * junction.w / 2, SVG::Color::BLACK);
-            
-            for (double w = .95; w > .25; w = 1.0 - (1.0 - w) * 1.2)
-            {
-                int c = std::min(255.0, 255 - 300 * w);
-                SVG::ColorObject clr(c, c, c);
-                svg.writePoint(junction.p, false, svg.getScale() * junction.w / 2 * w, clr);
-            }
-        }
-    for (auto& pair : edge_to_junctions)
-        for (ExtrusionJunction& junction : pair.second)
-            svg.writePoint(junction.p, false, 2, SVG::Color::YELLOW);
 }
 
 } // namespace arachne
