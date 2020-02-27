@@ -331,6 +331,9 @@ void TrapezoidationQuantizer::generateTransitioningRibs()
     }
 #endif
 
+    edge_to_transition_mids.clear();
+    edge_to_transition_ends.clear();
+
     applyTransitions(edge_to_transition_ends);
 }
 
