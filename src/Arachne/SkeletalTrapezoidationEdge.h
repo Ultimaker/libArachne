@@ -3,15 +3,17 @@
 #ifndef ARACHNE_SKELETAL_TRAPEZOIDATION_EDGE_H
 #define ARACHNE_SKELETAL_TRAPEZOIDATION_EDGE_H
 
+#include <cassert>
+
 #include "utils/HalfEdge.h"
 #include "utils/HalfEdgeNode.h"
 
 namespace arachne
 {
 
-class SkeletalTrapezoidationJoint;
+class SkeletalTrapezoidationNode;
 
-class SkeletalTrapezoidationEdge : public HalfEdge<SkeletalTrapezoidationEdge, SkeletalTrapezoidationJoint>
+class SkeletalTrapezoidationEdge : public HalfEdge<SkeletalTrapezoidationEdge, SkeletalTrapezoidationNode>
 {
 public:
     enum Type : int_least16_t
@@ -26,7 +28,7 @@ public:
     : SkeletalTrapezoidationEdge(NORMAL)
     {}
     SkeletalTrapezoidationEdge(Type type)
-    : HalfEdge<SkeletalTrapezoidationEdge, SkeletalTrapezoidationJoint>()
+    : HalfEdge<SkeletalTrapezoidationEdge, SkeletalTrapezoidationNode>()
     , type(type)
     , is_marked(-1)
     {}
@@ -44,6 +46,28 @@ public:
     {
         return is_marked >= 0;
     }
+    
+    /*!
+     * Check (recursively) whether there is any upward edge from the distance_to_boundary of the from of the \param edge
+     * 
+     * \param strict Whether equidistant edges can count as a local maximum
+     */
+    bool canGoUp(bool strict = false) const;
+
+    /*!
+     * Calculate the traversed distance until we meet an upward edge.
+     * Useful for calling on edges between equidistant points.
+     * 
+     * If we can go up then the distance includes the length of the \param edge
+     */
+    std::optional<coord_t> distToGoUp() const;
+
+    /*!
+     * Check whether the edge goes from a lower to a higher distance_to_boundary.
+     * Effectively deals with equidistant edges by looking beyond this edge.
+     */
+    bool isUpward() const;
+    
 private:
     int_least8_t is_marked; //! whether the edge is significant; whether the source segments have a sharp angle; -1 is unknown
 };

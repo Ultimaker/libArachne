@@ -62,7 +62,7 @@ void VariableWidthInsetGenerator::generateSegments()
     std::vector<edge_t*> upward_quad_mids;
     for (edge_t& edge : st.graph.edges)
     {
-        if (edge.prev && edge.next && st.isUpward(&edge))
+        if (edge.prev && edge.next && edge.isUpward())
         {
             upward_quad_mids.emplace_back(&edge);
         }
@@ -75,8 +75,8 @@ void VariableWidthInsetGenerator::generateSegments()
                     && b->from->distance_to_boundary == b->to->distance_to_boundary)
                 {
                     coord_t max = std::numeric_limits<coord_t>::max();
-                    coord_t a_dist_from_up = std::min(st.distToGoUp(a).value_or(max), st.distToGoUp(a->twin).value_or(max)) - vSize(a->to->p - a->from->p);
-                    coord_t b_dist_from_up = std::min(st.distToGoUp(b).value_or(max), st.distToGoUp(b->twin).value_or(max)) - vSize(b->to->p - b->from->p);
+                    coord_t a_dist_from_up = std::min(a->distToGoUp().value_or(max), a->twin->distToGoUp().value_or(max)) - vSize(a->to->p - a->from->p);
+                    coord_t b_dist_from_up = std::min(b->distToGoUp().value_or(max), b->twin->distToGoUp().value_or(max)) - vSize(b->to->p - b->from->p);
                     return a_dist_from_up < b_dist_from_up;
                 }
                 else if (a->from->distance_to_boundary == a->to->distance_to_boundary)
@@ -621,8 +621,8 @@ void VariableWidthInsetGenerator::generateLocalMaximaSingleBeads()
         node_t* node = pair.first;
         Beading& beading = pair.second.beading;
         if (beading.bead_widths.size() % 2 == 1
-            && st.isLocalMaximum(*node, true)
-            && !st.isMarked(node)
+            && node->isLocalMaximum(true)
+            && ! node->isMarked()
         )
         {
             size_t inset_index = beading.bead_widths.size() / 2;

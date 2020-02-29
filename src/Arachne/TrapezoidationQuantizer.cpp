@@ -149,7 +149,7 @@ void TrapezoidationQuantizer::filterMarking(coord_t max_length)
 {
     for (edge_t& edge : st.graph.edges)
     {
-        if (isEndOfMarking(edge) && !st.isLocalMaximum(*edge.to) && !st.isLocalMaximum(*edge.to))
+        if (isEndOfMarking(edge) && ! edge.to->isLocalMaximum() && ! edge.from->isLocalMaximum())
         {
             filterMarking(edge.twin, 0, max_length);
         }
@@ -172,7 +172,7 @@ bool TrapezoidationQuantizer::filterMarking(edge_t* starting_edge, coord_t trave
             should_dissolve &= filterMarking(next_edge, traveled_dist + length, max_length);
         }
     }
-    should_dissolve &= !st.isLocalMaximum(*starting_edge->to); // don't filter marked regions with a local maximum!
+    should_dissolve &= ! starting_edge->to->isLocalMaximum(); // don't filter marked regions with a local maximum!
     if (should_dissolve)
     {
         starting_edge->setMarked(false);
@@ -207,7 +207,7 @@ void TrapezoidationQuantizer::setBeadCount()
     // also for marked regions!! See TODO s in generateTransitionEnd(.)
     for (node_t& node : st.graph.nodes)
     {
-        if (st.isLocalMaximum(node))
+        if (node.isLocalMaximum())
         {
             if (node.distance_to_boundary < 0)
             {
@@ -499,7 +499,7 @@ std::list<TrapezoidationQuantizer::TransitionMidRef> TrapezoidationQuantizer::di
         Point b = edge->to->p;
         Point ab = b - a;
         coord_t ab_size = vSize(ab);
-        bool is_aligned = st.isUpward(edge);
+        bool is_aligned = edge->isUpward();
         edge_t* aligned_edge = is_aligned? edge : edge->twin;
         bool seen_transition_on_this_edge = false;
         auto edge_transitions_it = edge_to_transition_mids.find(aligned_edge);
@@ -711,7 +711,7 @@ bool TrapezoidationQuantizer::generateTransitionEnd(edge_t& edge, coord_t start_
         bool is_lower_end = end_rest == 0; // TODO collapse this parameter into the bool for which it is used here!
         std::list<TransitionEnd>* transitions = nullptr;
         coord_t pos = -1;
-        if (st.isUpward(&edge))
+        if (edge.isUpward())
         {
             transitions = &edge_to_transition_ends[&edge];
             pos = end_pos;

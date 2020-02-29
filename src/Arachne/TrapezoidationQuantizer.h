@@ -16,7 +16,7 @@
 #include "utils/ExtrusionLine.h"
 #include "SkeletalTrapezoidation.h"
 #include "SkeletalTrapezoidationEdge.h"
-#include "SkeletalTrapezoidationJoint.h"
+#include "SkeletalTrapezoidationNode.h"
 #include "BeadingStrategies/BeadingStrategy.h"
 
 #include "utils/STLwriter.h"
@@ -31,7 +31,7 @@ namespace arachne
 class TrapezoidationQuantizer
 {
     using edge_t = SkeletalTrapezoidationEdge;
-    using node_t = SkeletalTrapezoidationJoint;
+    using node_t = SkeletalTrapezoidationNode;
     using Beading = BeadingStrategy::Beading;
 
     SkeletalTrapezoidation& st;
