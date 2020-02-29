@@ -276,6 +276,11 @@ private:
      */
     bool generateTransitionEnd(edge_t& edge, coord_t start_pos, coord_t end_pos, coord_t transition_half_length, float start_rest, float end_rest, coord_t transition_lower_bead_count);
 
+    /*!
+     * Whether the quntized bead count is going down in the direction of the \p outgoing edge.
+     * 
+     * Note that the dist_to_boundary may be going up, but due to the quantization the bead count may stay the same.
+     */
     bool isGoingDown(edge_t* outgoing, coord_t traveled_dist, coord_t transition_half_length, coord_t lower_bead_count) const;
 
     /*!
@@ -283,7 +288,16 @@ private:
      */
     std::pair<edge_t*, edge_t*> insertRib(edge_t& edge, node_t* mid_node);
 
+    /*!
+     * Get the source polygon segment corresponding to the trapezoid in which the \p edge lies.
+     * 
+     * In case the source geometry is a concave vertex the two points returned are equal.
+     */
     std::pair<Point, Point> getSource(const edge_t& edge);
+    
+    /*!
+     * Check whether this edge is marked and no further edges are marked in the edge.next direction
+     */
     bool isEndOfMarking(const edge_t& edge) const;
 
     /*!
@@ -292,7 +306,7 @@ private:
      */
     void generateExtraRibs();
 
-    // ^ transitioning | v helpers
+    // ^ transitioning | v debug
 
 public:
     void debugCheckDecorationConsistency(bool transitioned); //!< Check logical relationships relting to distance_to_boundary and is_marked etc. Should be true anywhere after setMarking(.)
