@@ -1,8 +1,8 @@
 //Copyright (c) 2019 Ultimaker B.V.
 
 
-#ifndef ARACHNE_SKELETAL_TRAPEZOIDATION_JOINT_H
-#define ARACHNE_SKELETAL_TRAPEZOIDATION_JOINT_H
+#ifndef ARACHNE_SKELETAL_TRAPEZOIDATION_NODE_H
+#define ARACHNE_SKELETAL_TRAPEZOIDATION_NODE_H
 
 #include "utils/HalfEdge.h"
 #include "utils/HalfEdgeNode.h"
@@ -45,4 +45,4 @@ public:
 
 
 } // namespace arachne
-#endif // ARACHNE_SKELETAL_TRAPEZOIDATION_JOINT_H
+#endif // ARACHNE_SKELETAL_TRAPEZOIDATION_NODE_H
