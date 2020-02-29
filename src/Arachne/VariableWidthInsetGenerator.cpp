@@ -69,21 +69,21 @@ void VariableWidthInsetGenerator::generateSegments()
     }
     std::sort(upward_quad_mids.begin(), upward_quad_mids.end(), [this](edge_t* a, edge_t* b)
         {
-            if (a->to->data.distance_to_boundary == b->to->data.distance_to_boundary)
+            if (a->to->distance_to_boundary == b->to->distance_to_boundary)
             { // ordering between two 'upward' edges of the same distance is important when one of the edges is flat and connected to the other
-                if (a->from->data.distance_to_boundary == a->to->data.distance_to_boundary
-                    && b->from->data.distance_to_boundary == b->to->data.distance_to_boundary)
+                if (a->from->distance_to_boundary == a->to->distance_to_boundary
+                    && b->from->distance_to_boundary == b->to->distance_to_boundary)
                 {
                     coord_t max = std::numeric_limits<coord_t>::max();
                     coord_t a_dist_from_up = std::min(st.distToGoUp(a).value_or(max), st.distToGoUp(a->twin).value_or(max)) - vSize(a->to->p - a->from->p);
                     coord_t b_dist_from_up = std::min(st.distToGoUp(b).value_or(max), st.distToGoUp(b->twin).value_or(max)) - vSize(b->to->p - b->from->p);
                     return a_dist_from_up < b_dist_from_up;
                 }
-                else if (a->from->data.distance_to_boundary == a->to->data.distance_to_boundary)
+                else if (a->from->distance_to_boundary == a->to->distance_to_boundary)
                 {
                     return true; // edge a might be 'above' edge b
                 }
-                else if (b->from->data.distance_to_boundary == b->to->data.distance_to_boundary)
+                else if (b->from->distance_to_boundary == b->to->distance_to_boundary)
                 {
                     return false; // edge b might be 'above' edge a
                 }
@@ -92,28 +92,28 @@ void VariableWidthInsetGenerator::generateSegments()
                     // ordering is not important
                 }
             }
-            return a->to->data.distance_to_boundary > b->to->data.distance_to_boundary;
+            return a->to->distance_to_boundary > b->to->distance_to_boundary;
         });
 
     { // store beading
         for (node_t& node : st.graph.nodes)
         {
-            if (node.data.bead_count <= 0)
+            if (node.bead_count <= 0)
             {
                 continue;
             }
-            if (node.data.transition_ratio == 0)
+            if (node.transition_ratio == 0)
             {
-                auto pair = node_to_beading.emplace(&node, beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count));
-                assert(pair.first->second.beading.total_thickness == node.data.distance_to_boundary * 2);
+                auto pair = node_to_beading.emplace(&node, beading_strategy.compute(node.distance_to_boundary * 2, node.bead_count));
+                assert(pair.first->second.beading.total_thickness == node.distance_to_boundary * 2);
             }
             else
             {
-                Beading low_count_beading = beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count);
-                Beading high_count_beading = beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count + 1);
-                Beading merged = interpolate(low_count_beading, 1.0 - node.data.transition_ratio, high_count_beading);
+                Beading low_count_beading = beading_strategy.compute(node.distance_to_boundary * 2, node.bead_count);
+                Beading high_count_beading = beading_strategy.compute(node.distance_to_boundary * 2, node.bead_count + 1);
+                Beading merged = interpolate(low_count_beading, 1.0 - node.transition_ratio, high_count_beading);
                 node_to_beading.emplace(&node, merged);
-                assert(merged.total_thickness == node.data.distance_to_boundary * 2);
+                assert(merged.total_thickness == node.distance_to_boundary * 2);
             }
         }
     }
@@ -146,19 +146,19 @@ void VariableWidthInsetGenerator::generateSegments()
 VariableWidthInsetGenerator::edge_t* VariableWidthInsetGenerator::getQuadMaxRedgeTo(edge_t* quad_start_edge)
 {
     assert(quad_start_edge->prev == nullptr);
-    assert(quad_start_edge->from->data.distance_to_boundary == 0);
+    assert(quad_start_edge->from->distance_to_boundary == 0);
     coord_t max_R = -1;
     edge_t* ret = nullptr;
     for (edge_t* edge = quad_start_edge; edge; edge = edge->next)
     {
-        coord_t r = edge->to->data.distance_to_boundary;
+        coord_t r = edge->to->distance_to_boundary;
         if (r > max_R)
         {
             max_R = r;
             ret = edge;
         }
     }
-    if (!ret->next && ret->to->data.distance_to_boundary - 5 < ret->from->data.distance_to_boundary)
+    if (!ret->next && ret->to->distance_to_boundary - 5 < ret->from->distance_to_boundary)
     {
         ret = ret->prev;
     }
@@ -172,7 +172,7 @@ void VariableWidthInsetGenerator::propagateBeadingsUpward(std::vector<edge_t*>& 
     for (auto upward_quad_mids_it = upward_quad_mids.rbegin(); upward_quad_mids_it != upward_quad_mids.rend(); ++upward_quad_mids_it)
     {
         edge_t* upward_edge = *upward_quad_mids_it;
-        if (upward_edge->to->data.bead_count >= 0)
+        if (upward_edge->to->bead_count >= 0)
         { // don't override local beading
             continue;
         }
@@ -186,14 +186,14 @@ void VariableWidthInsetGenerator::propagateBeadingsUpward(std::vector<edge_t*>& 
         { // only propagate to places where there is place
             continue;
         }
-        assert((upward_edge->from->data.distance_to_boundary != upward_edge->to->data.distance_to_boundary || shorterThen(upward_edge->to->p - upward_edge->from->p, marking_filter_dist)) && "zero difference R edges should always be marked");
+        assert((upward_edge->from->distance_to_boundary != upward_edge->to->distance_to_boundary || shorterThen(upward_edge->to->p - upward_edge->from->p, marking_filter_dist)) && "zero difference R edges should always be marked");
         BeadingPropagation& lower_beading = lower_beading_it->second;
         coord_t length = vSize(upward_edge->to->p - upward_edge->from->p);
         BeadingPropagation upper_beading = lower_beading;
         upper_beading.dist_to_bottom_source += length;
         upper_beading.is_upward_propagated_only = true;
         auto pair = node_to_beading.emplace(upward_edge->to, upper_beading);
-        assert(upper_beading.beading.total_thickness <= upward_edge->to->data.distance_to_boundary * 2);
+        assert(upper_beading.beading.total_thickness <= upward_edge->to->distance_to_boundary * 2);
     }
 }
 
@@ -202,10 +202,10 @@ void VariableWidthInsetGenerator::propagateBeadingsDownward(std::vector<edge_t*>
     for (edge_t* upward_quad_mid : upward_quad_mids)
     {
         // transfer beading information to lower nodes
-        if (!upward_quad_mid->data.isMarked())
+        if (!upward_quad_mid->isMarked())
         {
             // for equidistant edge: propagate from known beading to node with unknown beading
-            if (upward_quad_mid->from->data.distance_to_boundary == upward_quad_mid->to->data.distance_to_boundary
+            if (upward_quad_mid->from->distance_to_boundary == upward_quad_mid->to->distance_to_boundary
                 && node_to_beading.find(upward_quad_mid->from) != node_to_beading.end()
                 && node_to_beading.find(upward_quad_mid->to) == node_to_beading.end()
             )
@@ -224,7 +224,7 @@ void VariableWidthInsetGenerator::propagateBeadingsDownward(edge_t* edge_to_peak
 {
     coord_t length = vSize(edge_to_peak->to->p - edge_to_peak->from->p);
     BeadingPropagation& top_beading = getBeading(edge_to_peak->to);
-    assert(top_beading.beading.total_thickness >= edge_to_peak->to->data.distance_to_boundary * 2);
+    assert(top_beading.beading.total_thickness >= edge_to_peak->to->distance_to_boundary * 2);
     assert( ! top_beading.is_upward_propagated_only);
 
     auto it = node_to_beading.find(edge_to_peak->from);
@@ -233,13 +233,13 @@ void VariableWidthInsetGenerator::propagateBeadingsDownward(edge_t* edge_to_peak
         BeadingPropagation propagated_beading = top_beading;
         propagated_beading.dist_from_top_source += length;
         auto pair = node_to_beading.emplace(edge_to_peak->from, propagated_beading);
-        assert(propagated_beading.beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
+        assert(propagated_beading.beading.total_thickness >= edge_to_peak->from->distance_to_boundary * 2);
         assert(pair.second && "we emplaced something");
 #ifdef DEBUG
     {
         auto it = node_to_beading.find(edge_to_peak->from);
         assert(it != node_to_beading.end());
-        assert(it->second.beading.total_thickness >= edge_to_peak->to->data.distance_to_boundary * 2);
+        assert(it->second.beading.total_thickness >= edge_to_peak->to->distance_to_boundary * 2);
     }
 #endif
     }
@@ -256,16 +256,16 @@ void VariableWidthInsetGenerator::propagateBeadingsDownward(edge_t* edge_to_peak
         }
         else
         {
-            Beading merged_beading = interpolate(top_beading.beading, ratio_of_top, bottom_beading.beading, edge_to_peak->from->data.distance_to_boundary);
+            Beading merged_beading = interpolate(top_beading.beading, ratio_of_top, bottom_beading.beading, edge_to_peak->from->distance_to_boundary);
             bottom_beading = BeadingPropagation(merged_beading);
             bottom_beading.is_upward_propagated_only = false;
-            assert(merged_beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
+            assert(merged_beading.total_thickness >= edge_to_peak->from->distance_to_boundary * 2);
         }
 #ifdef DEBUG
     {
         auto it = node_to_beading.find(edge_to_peak->from);
         assert(it != node_to_beading.end());
-        assert(it->second.beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
+        assert(it->second.beading.total_thickness >= edge_to_peak->from->distance_to_boundary * 2);
     }
 #endif
     }
@@ -334,23 +334,23 @@ void VariableWidthInsetGenerator::generateJunctions()
     for (edge_t& edge_ : st.graph.edges)
     {
         edge_t* edge = &edge_;
-        if (edge->from->data.distance_to_boundary > edge->to->data.distance_to_boundary)
+        if (edge->from->distance_to_boundary > edge->to->distance_to_boundary)
         { // only consider the upward half-edges
             continue;
         }
 
-        coord_t start_R = edge->to->data.distance_to_boundary; // higher R
-        coord_t end_R = edge->from->data.distance_to_boundary; // lower R
+        coord_t start_R = edge->to->distance_to_boundary; // higher R
+        coord_t end_R = edge->from->distance_to_boundary; // lower R
 
         Beading* beading = &getBeading(edge->to).beading;
         std::vector<ExtrusionJunction>& ret = edge_to_junctions[edge]; // emplace a new vector
-        if ((edge->from->data.bead_count == edge->to->data.bead_count && edge->from->data.bead_count >= 0)
+        if ((edge->from->bead_count == edge->to->bead_count && edge->from->bead_count >= 0)
             || end_R >= start_R)
         { // no beads to generate
             continue;
         }
 
-        assert(beading->total_thickness >= edge->to->data.distance_to_boundary * 2);
+        assert(beading->total_thickness >= edge->to->distance_to_boundary * 2);
 
         Point a = edge->to->p;
         Point b = edge->from->p;
@@ -397,7 +397,7 @@ void VariableWidthInsetGenerator::generateJunctions()
 
 const std::vector<ExtrusionJunction>& VariableWidthInsetGenerator::getJunctions(edge_t* edge)
 {
-    assert(edge->to->data.distance_to_boundary >= edge->from->data.distance_to_boundary);
+    assert(edge->to->distance_to_boundary >= edge->from->distance_to_boundary);
     auto ret_it = edge_to_junctions.find(edge);
     assert(ret_it != edge_to_junctions.end());
     return ret_it->second;
@@ -409,7 +409,7 @@ VariableWidthInsetGenerator::BeadingPropagation& VariableWidthInsetGenerator::ge
     auto beading_it = node_to_beading.find(node);
     if (beading_it == node_to_beading.end())
     {
-        if (node->data.bead_count == -1)
+        if (node->bead_count == -1)
         { // This bug is due to too small marked edges
             constexpr coord_t nearby_dist = 100; // TODO
             BeadingPropagation* nearest_beading = getNearestBeading(node, nearby_dist);
@@ -420,21 +420,21 @@ VariableWidthInsetGenerator::BeadingPropagation& VariableWidthInsetGenerator::ge
             coord_t dist = std::numeric_limits<coord_t>::max();
             for (edge_t* edge = node->some_edge; edge && (first || edge != node->some_edge); edge = edge->twin->next)
             {
-                if (edge->data.isMarked())
+                if (edge->isMarked())
                 {
                     has_marked_edge = true;
                 }
-                assert(edge->to->data.distance_to_boundary >= 0);
-                dist = std::min(dist, edge->to->data.distance_to_boundary + vSize(edge->to->p - edge->from->p));
+                assert(edge->to->distance_to_boundary >= 0);
+                dist = std::min(dist, edge->to->distance_to_boundary + vSize(edge->to->p - edge->from->p));
                 first = false;
             }
             RUN_ONCE(logError("Unknown beading for unmarked node!\n"));
 //             assert(false);
             assert(dist != std::numeric_limits<coord_t>::max());
-            node->data.bead_count = beading_strategy.optimalBeadCount(dist * 2);
+            node->bead_count = beading_strategy.optimalBeadCount(dist * 2);
         }
-        assert(node->data.bead_count != -1);
-        beading_it = node_to_beading.emplace(node, beading_strategy.compute(node->data.distance_to_boundary * 2, node->data.bead_count)).first;
+        assert(node->bead_count != -1);
+        beading_it = node_to_beading.emplace(node, beading_strategy.compute(node->distance_to_boundary * 2, node->bead_count)).first;
     }
     assert(beading_it != node_to_beading.end());
     return beading_it->second;
@@ -584,8 +584,8 @@ void VariableWidthInsetGenerator::connectJunctions()
                 ExtrusionJunction& from = from_junctions[from_junctions.size() - 1 - junction_rev_idx];
                 ExtrusionJunction& to = to_junctions[to_junctions.size() - 1 - junction_rev_idx];
                 assert(from.perimeter_index == to.perimeter_index);
-                bool is_odd_segment = edge_to_peak->to->data.bead_count > 0 && edge_to_peak->to->data.bead_count % 2 == 1 // quad contains single bead segment
-                    && edge_to_peak->to->data.transition_ratio == 0 && edge_to_peak->from->data.transition_ratio == 0 && edge_from_peak->to->data.transition_ratio == 0 // we're not in a transition
+                bool is_odd_segment = edge_to_peak->to->bead_count > 0 && edge_to_peak->to->bead_count % 2 == 1 // quad contains single bead segment
+                    && edge_to_peak->to->transition_ratio == 0 && edge_to_peak->from->transition_ratio == 0 && edge_from_peak->to->transition_ratio == 0 // we're not in a transition
                     && junction_rev_idx == segment_count - 1 // is single bead segment
                     && shorterThen(from.p - quad_start->to->p, 5) && shorterThen(to.p - quad_end->from->p, 5);
                 if (is_odd_segment
@@ -608,7 +608,7 @@ bool VariableWidthInsetGenerator::isMultiIntersection(node_t* node)
     for (edge_t* outgoing = node->some_edge; first || outgoing != node->some_edge; outgoing = outgoing->twin->next)
     {
         first = false;
-        if (outgoing->data.isMarked())
+        if (outgoing->isMarked())
             odd_path_count++;
     }
     return odd_path_count > 2;
@@ -652,21 +652,21 @@ void VariableWidthInsetGenerator::debugCheckDecorationConsistency(bool transitio
     for (const edge_t& edge : st.graph.edges)
     {
         const edge_t* edge_p = &edge;
-        assert(edge.data.type >= SkeletalTrapezoidationEdge::NORMAL);
-        if (edge.data.type != SkeletalTrapezoidationEdge::NORMAL)
+        assert(edge.type >= SkeletalTrapezoidationEdge::NORMAL);
+        if (edge.type != SkeletalTrapezoidationEdge::NORMAL)
         {
-            if (edge.from->data.distance_to_boundary != -1 && edge.to->data.distance_to_boundary != -1)
+            if (edge.from->distance_to_boundary != -1 && edge.to->distance_to_boundary != -1)
             {
-                assert(edge.from->data.distance_to_boundary == 0 || edge.to->data.distance_to_boundary == 0);
+                assert(edge.from->distance_to_boundary == 0 || edge.to->distance_to_boundary == 0);
             }
-            assert(!edge.data.isMarked());
+            assert(!edge.isMarked());
         }
-        assert(edge.data.isMarked() == edge.twin->data.isMarked());
-        if (edge.data.isMarked())
+        assert(edge.isMarked() == edge.twin->isMarked());
+        if (edge.isMarked())
         {
-            if (transitioned && edge.from->data.bead_count != -1 && edge.to->data.bead_count != -1)
+            if (transitioned && edge.from->bead_count != -1 && edge.to->bead_count != -1)
             {
-                assert(!edge.data.isMarked() || std::abs(edge.from->data.bead_count - edge.to->data.bead_count) <= 1);
+                assert(!edge.isMarked() || std::abs(edge.from->bead_count - edge.to->bead_count) <= 1);
             }
         }
     }
@@ -676,7 +676,7 @@ void VariableWidthInsetGenerator::debugCheckDecorationConsistency(bool transitio
 
 SVG::ColorObject VariableWidthInsetGenerator::getColor(edge_t& edge)
 {
-    switch (edge.data.type)
+    switch (edge.type)
     {
         case SkeletalTrapezoidationEdge::TRANSITION_END:
             return SVG::Color::MAGENTA;
@@ -740,7 +740,7 @@ void VariableWidthInsetGenerator::debugOutput(STLwriter& stl)
         if (found == node_to_beading.end())
             return 0.0f;
         BeadingPropagation& beading = found->second;
-        coord_t r = node->data.distance_to_boundary;
+        coord_t r = node->distance_to_boundary;
         size_t upper_inset_idx = 0;
         while (upper_inset_idx < beading.beading.toolpath_locations.size() && beading.beading.toolpath_locations[upper_inset_idx] < r)
             upper_inset_idx++;

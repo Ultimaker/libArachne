@@ -1,16 +1,17 @@
 //Copyright (c) 2019 Ultimaker B.V.
 
-
 #ifndef ARACHNE_SKELETAL_TRAPEZOIDATION_EDGE_H
 #define ARACHNE_SKELETAL_TRAPEZOIDATION_EDGE_H
 
+#include "utils/HalfEdge.h"
+#include "utils/HalfEdgeNode.h"
 
 namespace arachne
 {
 
 class SkeletalTrapezoidationJoint;
 
-class SkeletalTrapezoidationEdge
+class SkeletalTrapezoidationEdge : public HalfEdge<SkeletalTrapezoidationEdge, SkeletalTrapezoidationJoint>
 {
 public:
     enum Type : int_least16_t
@@ -25,7 +26,8 @@ public:
     : SkeletalTrapezoidationEdge(NORMAL)
     {}
     SkeletalTrapezoidationEdge(Type type)
-    : type(type)
+    : HalfEdge<SkeletalTrapezoidationEdge, SkeletalTrapezoidationJoint>()
+    , type(type)
     , is_marked(-1)
     {}
 

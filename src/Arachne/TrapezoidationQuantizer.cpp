@@ -120,26 +120,26 @@ void TrapezoidationQuantizer::setMarking()
     for (edge_t& edge : st.graph.edges)
     {
         assert(edge.twin);
-        if (edge.twin->data.markingIsSet())
+        if (edge.twin->markingIsSet())
         {
-            edge.data.setMarked(edge.twin->data.isMarked());
+            edge.setMarked(edge.twin->isMarked());
         }
-        else if (edge.data.type == SkeletalTrapezoidationEdge::EXTRA_VD)
+        else if (edge.type == SkeletalTrapezoidationEdge::EXTRA_VD)
         {
-            edge.data.setMarked(false);
+            edge.setMarked(false);
         }
-        else if (std::max(edge.from->data.distance_to_boundary, edge.to->data.distance_to_boundary) < outer_edge_filter_length)
+        else if (std::max(edge.from->distance_to_boundary, edge.to->distance_to_boundary) < outer_edge_filter_length)
         {
-            edge.data.setMarked(false);
+            edge.setMarked(false);
         }
         else
         {
             Point a = edge.from->p;
             Point b = edge.to->p;
             Point ab = b - a;
-            coord_t dR = std::abs(edge.to->data.distance_to_boundary - edge.from->data.distance_to_boundary);
+            coord_t dR = std::abs(edge.to->distance_to_boundary - edge.from->distance_to_boundary);
             coord_t dD = vSize(ab);
-            edge.data.setMarked(dR < dD * cap);
+            edge.setMarked(dR < dD * cap);
         }
     }
 }
@@ -167,7 +167,7 @@ bool TrapezoidationQuantizer::filterMarking(edge_t* starting_edge, coord_t trave
     bool should_dissolve = true;
     for (edge_t* next_edge = starting_edge->next; next_edge && next_edge != starting_edge->twin; next_edge = next_edge->twin->next)
     {
-        if (next_edge->data.isMarked())
+        if (next_edge->isMarked())
         {
             should_dissolve &= filterMarking(next_edge, traveled_dist + length, max_length);
         }
@@ -175,8 +175,8 @@ bool TrapezoidationQuantizer::filterMarking(edge_t* starting_edge, coord_t trave
     should_dissolve &= !st.isLocalMaximum(*starting_edge->to); // don't filter marked regions with a local maximum!
     if (should_dissolve)
     {
-        starting_edge->data.setMarked(false);
-        starting_edge->twin->data.setMarked(false);
+        starting_edge->setMarked(false);
+        starting_edge->twin->setMarked(false);
     }
     return should_dissolve;
 }
@@ -187,8 +187,8 @@ void TrapezoidationQuantizer::filterOuterMarking()
     {
         if (!edge.prev)
         {
-            edge.data.setMarked(false);
-            edge.twin->data.setMarked(false);
+            edge.setMarked(false);
+            edge.twin->setMarked(false);
         }
     }
 }
@@ -197,9 +197,9 @@ void TrapezoidationQuantizer::setBeadCount()
 {
     for (edge_t& edge : st.graph.edges)
     {
-        if (edge.data.isMarked())
+        if (edge.isMarked())
         {
-            edge.to->data.bead_count = beading_strategy.optimalBeadCount(edge.to->data.distance_to_boundary * 2);
+            edge.to->bead_count = beading_strategy.optimalBeadCount(edge.to->distance_to_boundary * 2);
         }
     }
 
@@ -209,18 +209,18 @@ void TrapezoidationQuantizer::setBeadCount()
     {
         if (st.isLocalMaximum(node))
         {
-            if (node.data.distance_to_boundary < 0)
+            if (node.distance_to_boundary < 0)
             {
                 RUN_ONCE(logWarning("Distance to boundary not yet computed for local maximum!\n"));
-                node.data.distance_to_boundary = std::numeric_limits<coord_t>::max();
+                node.distance_to_boundary = std::numeric_limits<coord_t>::max();
                 bool first = true;
                 for (edge_t* edge = node.some_edge; first || edge != node.some_edge; edge = edge->twin->next)
                 {
-                    node.data.distance_to_boundary = std::min(node.data.distance_to_boundary, edge->to->data.distance_to_boundary + vSize(edge->from->p - edge->to->p));
+                    node.distance_to_boundary = std::min(node.distance_to_boundary, edge->to->distance_to_boundary + vSize(edge->from->p - edge->to->p));
                 }
             }
-            coord_t bead_count = beading_strategy.optimalBeadCount(node.data.distance_to_boundary * 2);
-            node.data.bead_count = bead_count;
+            coord_t bead_count = beading_strategy.optimalBeadCount(node.distance_to_boundary * 2);
+            node.bead_count = bead_count;
         }
     }
 }
@@ -233,42 +233,42 @@ void TrapezoidationQuantizer:: filterUnmarkedRegions()
         {
             continue;
         }
-        assert(edge.to->data.bead_count >= 0 || edge.to->data.distance_to_boundary == 0);
-        coord_t max_dist = 400; // beading_strategy.getTransitioningLength(edge.to->data.bead_count)
-        filterUnmarkedRegions(&edge, edge.to->data.bead_count, 0, max_dist);
+        assert(edge.to->bead_count >= 0 || edge.to->distance_to_boundary == 0);
+        coord_t max_dist = 400; // beading_strategy.getTransitioningLength(edge.to->bead_count)
+        filterUnmarkedRegions(&edge, edge.to->bead_count, 0, max_dist);
     }
 }
 
 bool TrapezoidationQuantizer::filterUnmarkedRegions(edge_t* to_edge, coord_t bead_count, coord_t traveled_dist, coord_t max_dist)
 {
-    coord_t r = to_edge->to->data.distance_to_boundary;
+    coord_t r = to_edge->to->distance_to_boundary;
     bool dissolve = false;
     for (edge_t* next_edge = to_edge->next; next_edge && next_edge != to_edge->twin; next_edge = next_edge->twin->next)
     {
         coord_t length = vSize(next_edge->to->p - next_edge->from->p);
-        if (next_edge->to->data.distance_to_boundary < r && !shorterThen(next_edge->to->p - next_edge->from->p, 10))
+        if (next_edge->to->distance_to_boundary < r && !shorterThen(next_edge->to->p - next_edge->from->p, 10))
         { // only walk upward
             continue;
         }
-        if (next_edge->to->data.bead_count == bead_count)
+        if (next_edge->to->bead_count == bead_count)
         {
             dissolve = true;
         }
-        else if (next_edge->to->data.bead_count < 0)
+        else if (next_edge->to->bead_count < 0)
         {
             dissolve = filterUnmarkedRegions(next_edge, bead_count, traveled_dist + length, max_dist);
         }
         else // upward bead count is different
         {
             // dissolve if two marked regions with different bead count are closer together than the max_dist (= transition distance)
-            dissolve = (traveled_dist + length < max_dist) && std::abs(next_edge->to->data.bead_count - bead_count) == 1;
+            dissolve = (traveled_dist + length < max_dist) && std::abs(next_edge->to->bead_count - bead_count) == 1;
         }
         if (dissolve)
         {
-            next_edge->data.setMarked(true);
-            next_edge->twin->data.setMarked(true);
-            next_edge->to->data.bead_count = beading_strategy.optimalBeadCount(next_edge->to->data.distance_to_boundary * 2);
-            next_edge->to->data.transition_ratio = 0;
+            next_edge->setMarked(true);
+            next_edge->twin->setMarked(true);
+            next_edge->to->bead_count = beading_strategy.optimalBeadCount(next_edge->to->distance_to_boundary * 2);
+            next_edge->to->transition_ratio = 0;
         }
         return dissolve; // dissolving only depend on the one edge going upward. There cannot be multiple edges going upward.
     }
@@ -293,7 +293,7 @@ void TrapezoidationQuantizer::generateTransitioningRibs()
 
     for (edge_t& edge : st.graph.edges)
     { // check if there is a transition in between nodes with different bead counts
-        if (edge.data.isMarked() && edge.from->data.bead_count != edge.to->data.bead_count)
+        if (edge.isMarked() && edge.from->bead_count != edge.to->bead_count)
             assert(edge_to_transition_mids.find(&edge) != edge_to_transition_mids.end()
                 || edge_to_transition_mids.find(edge.twin) != edge_to_transition_mids.end() );
     }
@@ -339,19 +339,19 @@ void TrapezoidationQuantizer::generateTransitionMids()
 {
     for (edge_t& edge : st.graph.edges)
     {
-        assert(edge.data.markingIsSet());
-        if (!edge.data.isMarked())
+        assert(edge.markingIsSet());
+        if (!edge.isMarked())
         { // only marked regions introduce transitions
             continue;
         }
-        coord_t start_R = edge.from->data.distance_to_boundary;
-        coord_t end_R = edge.to->data.distance_to_boundary;
-        coord_t start_bead_count = edge.from->data.bead_count;
-        coord_t end_bead_count = edge.to->data.bead_count;
+        coord_t start_R = edge.from->distance_to_boundary;
+        coord_t end_R = edge.to->distance_to_boundary;
+        coord_t start_bead_count = edge.from->bead_count;
+        coord_t end_bead_count = edge.to->bead_count;
 
         if (start_R == end_R)
         { // no transitions occur when both end points have the same distance_to_boundary
-            assert(edge.from->data.bead_count == edge.to->data.bead_count);// TODO: what to do in this case?
+            assert(edge.from->bead_count == edge.to->bead_count);// TODO: what to do in this case?
             continue;
         }
         else if (start_R > end_R)
@@ -359,7 +359,7 @@ void TrapezoidationQuantizer::generateTransitionMids()
             continue;
         }
 
-        if (edge.from->data.bead_count == edge.to->data.bead_count)
+        if (edge.from->bead_count == edge.to->bead_count)
         { // no transitions should accur according to the enforced bead counts
             continue;
         }
@@ -390,7 +390,7 @@ void TrapezoidationQuantizer::generateTransitionMids()
             assert(edge_to_transition_mids[&edge].empty() || mid_pos >= edge_to_transition_mids[&edge].back().pos);
             edge_to_transition_mids[&edge].emplace_back(mid_pos, transition_lower_bead_count);
         }
-        if (edge.from->data.bead_count != edge.to->data.bead_count)
+        if (edge.from->bead_count != edge.to->bead_count)
         {
             assert(edge_to_transition_mids[&edge].size() >= 1);
         }
@@ -410,7 +410,7 @@ void TrapezoidationQuantizer::filterTransitionMids(std::unordered_map<edge_t*, s
             continue;
         }
         assert(transitions.front().lower_bead_count <= transitions.back().lower_bead_count); // this is how stuff should be stored in edge_to_transition_mids
-        assert(edge->from->data.distance_to_boundary <= edge->to->data.distance_to_boundary); // this is how stuff should be stored in edge_to_transition_mids
+        assert(edge->from->distance_to_boundary <= edge->to->distance_to_boundary); // this is how stuff should be stored in edge_to_transition_mids
         Point a = edge->from->p;
         Point b = edge->to->p;
         Point ab = b - a;
@@ -491,7 +491,7 @@ std::list<TrapezoidationQuantizer::TransitionMidRef> TrapezoidationQuantizer::di
     bool should_dissolve = true;
     for (edge_t* edge = edge_to_start->next; edge && edge != edge_to_start->twin; edge = edge->twin->next)
     {
-        if (!edge->data.isMarked())
+        if (!edge->isMarked())
         {
             continue;
         }
@@ -545,14 +545,14 @@ std::list<TrapezoidationQuantizer::TransitionMidRef> TrapezoidationQuantizer::di
 void TrapezoidationQuantizer::dissolveBeadCountRegion(edge_t* edge_to_start, coord_t from_bead_count, coord_t to_bead_count)
 {
     assert(from_bead_count != to_bead_count);
-    if (edge_to_start->to->data.bead_count != from_bead_count)
+    if (edge_to_start->to->bead_count != from_bead_count)
     {
         return;
     }
-    edge_to_start->to->data.bead_count = to_bead_count;
+    edge_to_start->to->bead_count = to_bead_count;
     for (edge_t* edge = edge_to_start->next; edge && edge != edge_to_start->twin; edge = edge->twin->next)
     {
-        if (!edge->data.isMarked())
+        if (!edge->isMarked())
         {
             continue;
         }
@@ -570,7 +570,7 @@ bool TrapezoidationQuantizer::filterEndOfMarkingTransition(edge_t* edge_to_start
     bool should_dissolve = false;
     for (edge_t* next_edge = edge_to_start->next; next_edge && next_edge != edge_to_start->twin; next_edge = next_edge->twin->next)
     {
-        if (next_edge->data.isMarked())
+        if (next_edge->isMarked())
         {
             coord_t length = vSize(next_edge->to->p - next_edge->from->p);
             should_dissolve |= filterEndOfMarkingTransition(next_edge, traveled_dist + length, max_dist, replacing_bead_count);
@@ -583,7 +583,7 @@ bool TrapezoidationQuantizer::filterEndOfMarkingTransition(edge_t* edge_to_start
     }
     if (should_dissolve)
     {
-        edge_to_start->to->data.bead_count = replacing_bead_count;
+        edge_to_start->to->bead_count = replacing_bead_count;
     }
     return should_dissolve;
 }
@@ -595,7 +595,7 @@ void TrapezoidationQuantizer::generateTransitionEnds()
         edge_t* edge = pair.first;
         std::list<TransitionMiddle>& transition_positions = pair.second;
 
-        assert(edge->from->data.distance_to_boundary <= edge->to->data.distance_to_boundary);
+        assert(edge->from->distance_to_boundary <= edge->to->distance_to_boundary);
         for (TransitionMiddle& transition_middle : transition_positions)
         {
             assert(transition_positions.front().pos <= transition_middle.pos);
@@ -654,15 +654,15 @@ bool TrapezoidationQuantizer::generateTransitionEnd(edge_t& edge, coord_t start_
 
     bool going_up = end_rest > start_rest;
 
-    assert(edge.data.isMarked());
-    if (!edge.data.isMarked())
+    assert(edge.isMarked());
+    if (!edge.isMarked())
     { // This function shouldn't generate ends in or beyond unmarked regions
         return false;
     }
 
     if (end_pos > ab_size)
     { // recurse on all further edges
-        coord_t R = edge.to->data.distance_to_boundary;
+        coord_t R = edge.to->distance_to_boundary;
         float rest = end_rest - (start_rest - end_rest) * (end_pos - ab_size) / (start_pos - end_pos);
         assert(rest >= 0);
         assert(rest <= std::max(end_rest, start_rest));
@@ -671,7 +671,7 @@ bool TrapezoidationQuantizer::generateTransitionEnd(edge_t& edge, coord_t start_
         coord_t marked_edge_count = 0;
         for (edge_t* outgoing = edge.next; outgoing && outgoing != edge.twin; outgoing = outgoing->twin->next)
         {
-            if (!outgoing->data.isMarked()) continue;
+            if (!outgoing->isMarked()) continue;
             marked_edge_count++;
         }
 
@@ -680,7 +680,7 @@ bool TrapezoidationQuantizer::generateTransitionEnd(edge_t& edge, coord_t start_
         for (edge_t* outgoing = edge.next; outgoing && outgoing != edge.twin;)
         {
             edge_t* next = outgoing->twin->next; // before we change the outgoing edge itself
-            if (!outgoing->data.isMarked())
+            if (!outgoing->isMarked())
             {
                 outgoing = next;
                 continue; // don't put transition ends in non-marked regions
@@ -699,14 +699,14 @@ bool TrapezoidationQuantizer::generateTransitionEnd(edge_t& edge, coord_t start_
         }
         if (!going_up || (has_recursed && !is_only_going_down))
         {
-            edge.to->data.transition_ratio = rest;
-            edge.to->data.bead_count = lower_bead_count;
+            edge.to->transition_ratio = rest;
+            edge.to->bead_count = lower_bead_count;
         }
         return is_only_going_down;
     }
     else // end_pos < ab_size
     { // add transition end point here
-//         assert(edge.data.isMarked() && "we should only be adding transition ends in marked regions");
+//         assert(edge.isMarked() && "we should only be adding transition ends in marked regions");
         
         bool is_lower_end = end_rest == 0; // TODO collapse this parameter into the bool for which it is used here!
         std::list<TransitionEnd>* transitions = nullptr;
@@ -740,13 +740,13 @@ bool TrapezoidationQuantizer::isGoingDown(edge_t* outgoing, coord_t traveled_dis
 {
     // NOTE: the logic below is not fully thought through.
     // TODO: take transition mids into account
-    if (outgoing->to->data.distance_to_boundary == 0)
+    if (outgoing->to->distance_to_boundary == 0)
     {
         return true;
     }
-    bool is_upward = outgoing->to->data.distance_to_boundary >= outgoing->from->data.distance_to_boundary;
+    bool is_upward = outgoing->to->distance_to_boundary >= outgoing->from->distance_to_boundary;
     edge_t* upward_edge = is_upward? outgoing : outgoing->twin;
-    if (outgoing->to->data.bead_count > lower_bead_count + 1)
+    if (outgoing->to->bead_count > lower_bead_count + 1)
     {
         assert(edge_to_transition_mids.find(upward_edge) != edge_to_transition_mids.end() && "If the bead count is going down there has to be a transition mid!");
         return false;
@@ -773,8 +773,8 @@ bool TrapezoidationQuantizer::isGoingDown(edge_t* outgoing, coord_t traveled_dis
     {
         return false;
     }
-    if (outgoing->to->data.bead_count <= lower_bead_count
-        && !(outgoing->to->data.bead_count == lower_bead_count && outgoing->to->data.transition_ratio > 0.0))
+    if (outgoing->to->bead_count <= lower_bead_count
+        && !(outgoing->to->bead_count == lower_bead_count && outgoing->to->transition_ratio > 0.0))
     {
         return true;
     }
@@ -783,7 +783,7 @@ bool TrapezoidationQuantizer::isGoingDown(edge_t* outgoing, coord_t traveled_dis
     bool has_recursed = false;
     for (edge_t* next = outgoing->next; next && next != outgoing->twin; next = next->twin->next)
     {
-        if (!next->data.isMarked())
+        if (!next->isMarked())
         {
             continue;
         }
@@ -813,7 +813,7 @@ void TrapezoidationQuantizer::applyTransitions(std::unordered_map<edge_t*, std::
     for (std::pair<edge_t* const, std::list<TransitionEnd>>& pair : edge_to_transition_ends)
     {
         edge_t* edge = pair.first;
-        assert(edge->data.isMarked());
+        assert(edge->isMarked());
 
         std::list<TransitionEnd>& transitions = pair.second;
 
@@ -833,12 +833,12 @@ void TrapezoidationQuantizer::applyTransitions(std::unordered_map<edge_t*, std::
             coord_t end_pos = transition_end.pos;
             node_t* close_node = (end_pos < ab_size / 2)? from : to;
             if ((end_pos < snap_dist || end_pos > ab_size - snap_dist)
-                && close_node->data.bead_count == new_node_bead_count
+                && close_node->bead_count == new_node_bead_count
             )
             {
                 assert(end_pos <= ab_size);
-//                 close_node->data.bead_count = new_node_bead_count;
-                close_node->data.transition_ratio = 0;
+//                 close_node->bead_count = new_node_bead_count;
+                close_node->transition_ratio = 0;
                 continue;
             }
             Point mid = a + normal(ab, end_pos);
@@ -848,11 +848,11 @@ void TrapezoidationQuantizer::applyTransitions(std::unordered_map<edge_t*, std::
 
             debugCheckDecorationConsistency(false);
 
-            assert(last_edge_replacing_input->data.isMarked());
-            assert(last_edge_replacing_input->data.type != SkeletalTrapezoidationEdge::EXTRA_VD);
+            assert(last_edge_replacing_input->isMarked());
+            assert(last_edge_replacing_input->type != SkeletalTrapezoidationEdge::EXTRA_VD);
             last_edge_replacing_input = insertNode(last_edge_replacing_input, mid, new_node_bead_count);
-            assert(last_edge_replacing_input->data.type != SkeletalTrapezoidationEdge::EXTRA_VD);
-            assert(last_edge_replacing_input->data.isMarked());
+            assert(last_edge_replacing_input->type != SkeletalTrapezoidationEdge::EXTRA_VD);
+            assert(last_edge_replacing_input->isMarked());
 
 
             st.debugCheckGraphCompleteness();
@@ -865,7 +865,7 @@ TrapezoidationQuantizer::edge_t* TrapezoidationQuantizer::insertNode(edge_t* edg
 {
     edge_t* last_edge_replacing_input = edge;
 
-    st.graph.nodes.emplace_back(SkeletalTrapezoidationJoint(), mid);
+    st.graph.nodes.emplace_back(mid);
     node_t* mid_node = &st.graph.nodes.back();
 
     edge_t* twin = last_edge_replacing_input->twin;
@@ -885,7 +885,7 @@ TrapezoidationQuantizer::edge_t* TrapezoidationQuantizer::insertNode(edge_t* edg
     last_edge_replacing_input->twin = first_edge_replacing_twin;
     first_edge_replacing_twin->twin = last_edge_replacing_input;
 
-    mid_node->data.bead_count = mide_node_bead_count;
+    mid_node->bead_count = mide_node_bead_count;
 
     return last_edge_replacing_input;
 }
@@ -904,12 +904,12 @@ std::pair<TrapezoidationQuantizer::edge_t*, TrapezoidationQuantizer::edge_t*> Tr
     Point px = LinearAlg2D::getClosestOnLineSegment(p, source_segment.first, source_segment.second);
     coord_t dist = vSize(p - px);
     assert(dist > 0);
-    mid_node->data.distance_to_boundary = dist;
-    mid_node->data.transition_ratio = 0; // both transition end should have rest = 0, because at the ends a whole number of beads fits without rest
+    mid_node->distance_to_boundary = dist;
+    mid_node->transition_ratio = 0; // both transition end should have rest = 0, because at the ends a whole number of beads fits without rest
 
-    st.graph.nodes.emplace_back(SkeletalTrapezoidationJoint(), px);
+    st.graph.nodes.emplace_back(px);
     node_t* source_node = &st.graph.nodes.back();
-    source_node->data.distance_to_boundary = 0;
+    source_node->distance_to_boundary = 0;
 
     edge_t* first = &edge;
     st.graph.edges.emplace_back(SkeletalTrapezoidationEdge());
@@ -946,10 +946,10 @@ std::pair<TrapezoidationQuantizer::edge_t*, TrapezoidationQuantizer::edge_t*> Tr
     source_node->some_edge = inward_edge;
     if (edge_after) node_after->some_edge = edge_after;
 
-    first->data.setMarked(true);
-    outward_edge->data.setMarked(false); // TODO verify this is always the case.
-    inward_edge->data.setMarked(false);
-    second->data.setMarked(true);
+    first->setMarked(true);
+    outward_edge->setMarked(false); // TODO verify this is always the case.
+    inward_edge->setMarked(false);
+    second->setMarked(true);
 
     outward_edge->twin = inward_edge;
     inward_edge->twin = outward_edge;
@@ -957,7 +957,7 @@ std::pair<TrapezoidationQuantizer::edge_t*, TrapezoidationQuantizer::edge_t*> Tr
     first->twin = nullptr; // we don't know these yet!
     second->twin = nullptr;
 
-    assert(second->prev->from->data.distance_to_boundary == 0);
+    assert(second->prev->from->distance_to_boundary == 0);
 
     st.debugCheckGraphConsistency();
 
@@ -974,7 +974,7 @@ std::pair<Point, Point> TrapezoidationQuantizer::getSource(const edge_t& edge)
 
 bool TrapezoidationQuantizer::isEndOfMarking(const edge_t& edge_to) const
 {
-    if (!edge_to.data.isMarked())
+    if (!edge_to.isMarked())
     {
         return false;
     }
@@ -984,7 +984,7 @@ bool TrapezoidationQuantizer::isEndOfMarking(const edge_t& edge_to) const
     }
     for (const edge_t* edge = edge_to.next; edge && edge != edge_to.twin; edge = edge->twin->next)
     {
-        if (edge->data.isMarked())
+        if (edge->isMarked())
         {
             return false;
         }
@@ -1002,11 +1002,11 @@ void TrapezoidationQuantizer::generateExtraRibs()
     for (auto edge_it = st.graph.edges.begin(); std::prev(edge_it) != end_edge_it; ++edge_it)
     {
         edge_t& edge = *edge_it;
-        if ( ! edge.data.isMarked()) continue;
+        if ( ! edge.isMarked()) continue;
         if (shorterThen(edge.to->p - edge.from->p, discretization_step_size)) continue;
-        if (edge.from->data.distance_to_boundary >= edge.to->data.distance_to_boundary) continue;
+        if (edge.from->distance_to_boundary >= edge.to->distance_to_boundary) continue;
 
-        std::vector<coord_t> rib_thicknesses = beading_strategy.getNonlinearThicknesses(edge.from->data.bead_count);
+        std::vector<coord_t> rib_thicknesses = beading_strategy.getNonlinearThicknesses(edge.from->bead_count);
 
         if (rib_thicknesses.empty()) continue;
 
@@ -1017,26 +1017,26 @@ void TrapezoidationQuantizer::generateExtraRibs()
         Point b = to->p;
         Point ab = b - a;
         coord_t ab_size = vSize(ab);
-        coord_t a_R = edge.from->data.distance_to_boundary;
-        coord_t b_R = edge.to->data.distance_to_boundary;
+        coord_t a_R = edge.from->distance_to_boundary;
+        coord_t b_R = edge.to->distance_to_boundary;
         
         edge_t* last_edge_replacing_input = &edge;
         for (coord_t rib_thickness : rib_thicknesses)
         {
             if (rib_thickness / 2 <= a_R) continue;
             if (rib_thickness / 2 >= b_R) break;
-            coord_t new_node_bead_count = std::min(edge.from->data.bead_count, edge.to->data.bead_count);
+            coord_t new_node_bead_count = std::min(edge.from->bead_count, edge.to->bead_count);
             coord_t end_pos = ab_size * (rib_thickness / 2 - a_R) / (b_R - a_R);
             assert(end_pos > 0);
             assert(end_pos < ab_size);
             node_t* close_node = (end_pos < ab_size / 2)? from : to;
             if ((end_pos < snap_dist || end_pos > ab_size - snap_dist)
-                && close_node->data.bead_count == new_node_bead_count
+                && close_node->bead_count == new_node_bead_count
             )
             {
                 assert(end_pos <= ab_size);
-//                 close_node->data.bead_count = new_node_bead_count;
-                close_node->data.transition_ratio = 0;
+//                 close_node->bead_count = new_node_bead_count;
+                close_node->transition_ratio = 0;
                 continue;
             }
             Point mid = a + normal(ab, end_pos);
@@ -1046,11 +1046,11 @@ void TrapezoidationQuantizer::generateExtraRibs()
 
             debugCheckDecorationConsistency(false);
 
-            assert(last_edge_replacing_input->data.isMarked());
-            assert(last_edge_replacing_input->data.type != SkeletalTrapezoidationEdge::EXTRA_VD);
+            assert(last_edge_replacing_input->isMarked());
+            assert(last_edge_replacing_input->type != SkeletalTrapezoidationEdge::EXTRA_VD);
             last_edge_replacing_input = insertNode(last_edge_replacing_input, mid, new_node_bead_count);
-            assert(last_edge_replacing_input->data.type != SkeletalTrapezoidationEdge::EXTRA_VD);
-            assert(last_edge_replacing_input->data.isMarked());
+            assert(last_edge_replacing_input->type != SkeletalTrapezoidationEdge::EXTRA_VD);
+            assert(last_edge_replacing_input->isMarked());
 
 
             st.debugCheckGraphCompleteness();
@@ -1075,21 +1075,21 @@ void TrapezoidationQuantizer::debugCheckDecorationConsistency(bool transitioned)
     for (const edge_t& edge : st.graph.edges)
     {
         const edge_t* edge_p = &edge;
-        assert(edge.data.type >= SkeletalTrapezoidationEdge::NORMAL);
-        if (edge.data.type != SkeletalTrapezoidationEdge::NORMAL)
+        assert(edge.type >= SkeletalTrapezoidationEdge::NORMAL);
+        if (edge.type != SkeletalTrapezoidationEdge::NORMAL)
         {
-            if (edge.from->data.distance_to_boundary != -1 && edge.to->data.distance_to_boundary != -1)
+            if (edge.from->distance_to_boundary != -1 && edge.to->distance_to_boundary != -1)
             {
-                assert(edge.from->data.distance_to_boundary == 0 || edge.to->data.distance_to_boundary == 0);
+                assert(edge.from->distance_to_boundary == 0 || edge.to->distance_to_boundary == 0);
             }
-            assert(!edge.data.isMarked());
+            assert(!edge.isMarked());
         }
-        assert(edge.data.isMarked() == edge.twin->data.isMarked());
-        if (edge.data.isMarked())
+        assert(edge.isMarked() == edge.twin->isMarked());
+        if (edge.isMarked())
         {
-            if (transitioned && edge.from->data.bead_count != -1 && edge.to->data.bead_count != -1)
+            if (transitioned && edge.from->bead_count != -1 && edge.to->bead_count != -1)
             {
-                assert(!edge.data.isMarked() || std::abs(edge.from->data.bead_count - edge.to->data.bead_count) <= 1);
+                assert(!edge.isMarked() || std::abs(edge.from->bead_count - edge.to->bead_count) <= 1);
             }
         }
     }
@@ -1104,7 +1104,7 @@ void TrapezoidationQuantizer::debugCheckTransitionMids() const
         const edge_t* edge = pair.first;
         const std::list<TransitionMiddle>& transition_positions = pair.second;
         
-        assert(edge->from->data.distance_to_boundary <= edge->to->data.distance_to_boundary);
+        assert(edge->from->distance_to_boundary <= edge->to->distance_to_boundary);
         
         const TransitionMiddle* prev = nullptr;
         for (const TransitionMiddle& here : transition_positions)
@@ -1124,7 +1124,7 @@ void TrapezoidationQuantizer::debugCheckTransitionMids() const
 
 SVG::ColorObject TrapezoidationQuantizer::getColor(edge_t& edge)
 {
-    switch (edge.data.type)
+    switch (edge.type)
     {
         case SkeletalTrapezoidationEdge::TRANSITION_END:
             return SVG::Color::MAGENTA;

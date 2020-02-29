@@ -38,9 +38,9 @@ class SkeletalTrapezoidation
 protected:
     using pos_t = double;
     using vd_t = boost::polygon::voronoi_diagram<pos_t>;
-    using graph_t = HalfEdgeGraph<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge>;
-    using edge_t = HalfEdge<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge>;
-    using node_t = HalfEdgeNode<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge>;
+    using graph_t = HalfEdgeGraph<SkeletalTrapezoidationEdge, SkeletalTrapezoidationJoint>;
+    using edge_t = SkeletalTrapezoidationEdge;
+    using node_t = SkeletalTrapezoidationJoint;
 
     const Polygons& polys; //!< input outline boundary shape
 
@@ -58,7 +58,7 @@ public:
     {
     }
 
-    HalfEdgeGraph<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge> graph;
+    graph_t graph;
 
     /*!
      * Compute the skeletal trapezoidation decomposition of the input shape.

@@ -39,11 +39,8 @@ namespace arachne
  */
 class VariableWidthInsetGenerator
 {
-    using pos_t = double;
-    using vd_t = boost::polygon::voronoi_diagram<pos_t>;
-    using graph_t = HalfEdgeGraph<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge>;
-    using edge_t = HalfEdge<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge>;
-    using node_t = HalfEdgeNode<SkeletalTrapezoidationJoint, SkeletalTrapezoidationEdge>;
+    using edge_t = SkeletalTrapezoidationEdge;
+    using node_t = SkeletalTrapezoidationJoint;
     using Beading = BeadingStrategy::Beading;
 
 public:

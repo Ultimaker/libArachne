@@ -30,7 +30,7 @@ SkeletalTrapezoidation::node_t& SkeletalTrapezoidation::makeNode(vd_t::vertex_ty
     auto he_node_it = vd_node_to_he_node.find(&vd_node);
     if (he_node_it == vd_node_to_he_node.end())
     {
-        graph.nodes.emplace_front(SkeletalTrapezoidationJoint(), p);
+        graph.nodes.emplace_front(p);
         node_t& node = graph.nodes.front();
         vd_node_to_he_node.emplace(&vd_node, &node);
         return node;
@@ -104,7 +104,7 @@ void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type&
             node_t* v1;
             if (p1_idx < discretized.size() - 1)
             {
-                graph.nodes.emplace_front(SkeletalTrapezoidationJoint(), p1);
+                graph.nodes.emplace_front(p1);
                 v1 = &graph.nodes.front();
             }
             else
@@ -143,12 +143,12 @@ void SkeletalTrapezoidation::makeRib(edge_t*& prev_edge, Point start_source_poin
 {
     Point p = LinearAlg2D::getClosestOnLineSegment(prev_edge->to->p, start_source_point, end_source_point);
     coord_t dist = vSize(prev_edge->to->p - p);
-    prev_edge->to->data.distance_to_boundary = dist;
+    prev_edge->to->distance_to_boundary = dist;
     assert(dist >= 0);
 
-    graph.nodes.emplace_front(SkeletalTrapezoidationJoint(), p);
+    graph.nodes.emplace_front(p);
     node_t* node = &graph.nodes.front();
-    node->data.distance_to_boundary = 0;
+    node->distance_to_boundary = 0;
     
     graph.edges.emplace_front(SkeletalTrapezoidationEdge(SkeletalTrapezoidationEdge::EXTRA_VD));
     edge_t* forth_edge = &graph.edges.front();
@@ -446,9 +446,9 @@ void SkeletalTrapezoidation::initializeGraph()
         edge_t* prev_edge = nullptr;
         transferEdge(start_source_point, VoronoiUtils::p(starting_vd_edge->vertex1()), *starting_vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
         node_t* starting_node = vd_node_to_he_node[starting_vd_edge->vertex0()];
-        starting_node->data.distance_to_boundary = 0;
+        starting_node->distance_to_boundary = 0;
         // starting_edge->prev = nullptr;
-//         starting_edge->from->data.distance_to_boundary = 0; // TODO
+//         starting_edge->from->distance_to_boundary = 0; // TODO
 
         makeRib(prev_edge, start_source_point, end_source_point);
         for (vd_t::edge_type* vd_edge = starting_vd_edge->next(); vd_edge != ending_vd_edge; vd_edge = vd_edge->next())
@@ -463,7 +463,7 @@ void SkeletalTrapezoidation::initializeGraph()
 
         transferEdge(VoronoiUtils::p(ending_vd_edge->vertex0()), end_source_point, *ending_vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
         // ending_edge->next = nullptr;
-        prev_edge->to->data.distance_to_boundary = 0;
+        prev_edge->to->distance_to_boundary = 0;
 
         debugCheckGraphConsistency(true);
     }
@@ -740,7 +740,7 @@ void SkeletalTrapezoidation::fixNodeDuplication()
 
 bool SkeletalTrapezoidation::isLocalMaximum(const node_t& node, bool strict) const
 {
-    if (node.data.distance_to_boundary == 0)
+    if (node.distance_to_boundary == 0)
     {
         return false;
     }
@@ -763,11 +763,11 @@ bool SkeletalTrapezoidation::isLocalMaximum(const node_t& node, bool strict) con
 
 bool SkeletalTrapezoidation::canGoUp(const edge_t* edge, bool strict) const
 {
-    if (edge->to->data.distance_to_boundary > edge->from->data.distance_to_boundary)
+    if (edge->to->distance_to_boundary > edge->from->distance_to_boundary)
     {
         return true;
     }
-    if (edge->to->data.distance_to_boundary < edge->from->data.distance_to_boundary
+    if (edge->to->distance_to_boundary < edge->from->distance_to_boundary
         || strict
     )
     {
@@ -788,11 +788,11 @@ bool SkeletalTrapezoidation::canGoUp(const edge_t* edge, bool strict) const
 
 std::optional<coord_t> SkeletalTrapezoidation::distToGoUp(const edge_t* edge) const
 {
-    if (edge->to->data.distance_to_boundary > edge->from->data.distance_to_boundary)
+    if (edge->to->distance_to_boundary > edge->from->distance_to_boundary)
     {
         return 0;
     }
-    if (edge->to->data.distance_to_boundary < edge->from->data.distance_to_boundary)
+    if (edge->to->distance_to_boundary < edge->from->distance_to_boundary)
     {
         return std::optional<coord_t>();
     }
@@ -824,11 +824,11 @@ std::optional<coord_t> SkeletalTrapezoidation::distToGoUp(const edge_t* edge) co
 
 bool SkeletalTrapezoidation::isUpward(const edge_t* edge) const
 {
-    if (edge->to->data.distance_to_boundary > edge->from->data.distance_to_boundary)
+    if (edge->to->distance_to_boundary > edge->from->distance_to_boundary)
     {
         return true;
     }
-    if (edge->to->data.distance_to_boundary < edge->from->data.distance_to_boundary)
+    if (edge->to->distance_to_boundary < edge->from->distance_to_boundary)
     {
         return false;
     }
@@ -849,7 +849,7 @@ bool SkeletalTrapezoidation::isMarked(const node_t* node) const
     bool first = true;
     for (edge_t* edge = node->some_edge; first || edge != node->some_edge; edge = edge->twin->next)
     {
-        if (edge->data.isMarked())
+        if (edge->isMarked())
         {
             return true;
         }
@@ -889,8 +889,8 @@ void SkeletalTrapezoidation::debugCheckGraphCompleteness()
         }
         assert((edge.next == nullptr) == (edge.twin->prev == nullptr));
         assert((edge.prev == nullptr) == (edge.twin->next == nullptr));
-        assert(edge.next || edge.to->data.distance_to_boundary == 0);
-        assert(edge.prev || edge.from->data.distance_to_boundary == 0);
+        assert(edge.next || edge.to->distance_to_boundary == 0);
+        assert(edge.prev || edge.from->distance_to_boundary == 0);
     }
 #endif
 }
@@ -1097,7 +1097,7 @@ void SkeletalTrapezoidation::debugCheckGraphConsistency(bool ignore_duplication)
 
 SVG::ColorObject SkeletalTrapezoidation::getColor(edge_t& edge)
 {
-    switch (edge.data.type)
+    switch (edge.type)
     {
         case SkeletalTrapezoidationEdge::TRANSITION_END:
             return SVG::Color::MAGENTA;
@@ -1119,7 +1119,7 @@ void SkeletalTrapezoidation::debugOutput(SVG& svg, bool draw_arrows, bool draw_d
         Point b = edge.to->p;
         SVG::ColorObject clr = getColor(edge);
         float stroke_width = 1;
-        if (edge.data.markingIsSet() && edge.data.isMarked())
+        if (edge.markingIsSet() && edge.isMarked())
         {
             continue;
         }
@@ -1143,7 +1143,7 @@ void SkeletalTrapezoidation::debugOutput(SVG& svg, bool draw_arrows, bool draw_d
         Point b = edge.to->p;
         SVG::ColorObject clr = SVG::Color::BLUE;
         float stroke_width = 2;
-        if ( ! edge.data.markingIsSet() || ! edge.data.isMarked())
+        if ( ! edge.markingIsSet() || ! edge.isMarked())
         {
             continue;
         }
@@ -1167,22 +1167,22 @@ void SkeletalTrapezoidation::debugOutput(SVG& svg, bool draw_arrows, bool draw_d
         {
             svg.writePoint(node.p);
         }
-        if (draw_dists && node.data.distance_to_boundary > 0)
+        if (draw_dists && node.distance_to_boundary > 0)
         {
-            svg.writeText(node.p, std::to_string(node.data.distance_to_boundary));
+            svg.writeText(node.p, std::to_string(node.distance_to_boundary));
         }
-        if (draw_bead_counts && node.data.bead_count >= 0)
+        if (draw_bead_counts && node.bead_count >= 0)
         {
-            if (node.data.transition_ratio != 0)
+            if (node.transition_ratio != 0)
             {
                 std::ostringstream ss;
                 ss.precision(2);
-                ss << (node.data.transition_ratio + node.data.bead_count);
+                ss << (node.transition_ratio + node.bead_count);
                 svg.writeText(node.p, ss.str());
             }
             else
             {
-                svg.writeText(node.p, std::to_string(node.data.bead_count));
+                svg.writeText(node.p, std::to_string(node.bead_count));
             }
         }
         if (draw_locations)
@@ -1200,7 +1200,7 @@ void SkeletalTrapezoidation::debugOutputSTL(STLwriter& stl, bool use_bead_count)
 {
     auto toPoint3 = [use_bead_count](node_t* node)
         {
-            coord_t h = use_bead_count? std::max(float(0), node->data.bead_count + node->data.transition_ratio) * 200 : node->data.distance_to_boundary;
+            coord_t h = use_bead_count? std::max(float(0), node->bead_count + node->transition_ratio) * 200 : node->distance_to_boundary;
             return Point3(node->p.X, node->p.Y, h);
         };
     for (edge_t& edge : graph.edges)

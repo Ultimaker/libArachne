@@ -17,12 +17,15 @@
 namespace arachne
 {
 
-template<class node_data_t, class edge_data_t> // types of data contained in nodes and edges
+template<
+typename edge_t,
+typename node_t,
+class = typename std::enable_if<std::is_base_of<HalfEdge<edge_t, node_t>, edge_t>::value>,
+class = typename std::enable_if<std::is_base_of<HalfEdgeNode<edge_t, node_t>, node_t>::value>
+>
 class HalfEdgeGraph
 {
 public:
-    using edge_t = HalfEdge<node_data_t, edge_data_t>;
-    using node_t = HalfEdgeNode<node_data_t, edge_data_t>;
     std::list<edge_t> edges;
     std::list<node_t> nodes;
 
@@ -34,8 +37,8 @@ public:
 
 
 
-template<class node_data_t, class edge_data_t>
-void HalfEdgeGraph<node_data_t, edge_data_t>::debugOutput(std::string filename)
+template<typename edge_t, typename node_t, typename edge_t_enabled, typename node_t_enabled>
+void HalfEdgeGraph<edge_t, node_t, edge_t_enabled, node_t_enabled>::debugOutput(std::string filename)
 {
     AABB aabb;
     for (node_t& node : nodes)
@@ -46,9 +49,8 @@ void HalfEdgeGraph<node_data_t, edge_data_t>::debugOutput(std::string filename)
     debugOutput(svg);
 }
 
-
-template<class node_data_t, class edge_data_t>
-void HalfEdgeGraph<node_data_t, edge_data_t>::debugOutput(SVG& svg)
+template<typename edge_t, typename node_t, typename edge_t_enabled, typename node_t_enabled>
+void HalfEdgeGraph<edge_t, node_t, edge_t_enabled, node_t_enabled>::debugOutput(SVG& svg)
 {
 //     for (node_t& node : nodes)
 //     {
@@ -60,9 +62,8 @@ void HalfEdgeGraph<node_data_t, edge_data_t>::debugOutput(SVG& svg)
     }
 }
 
-
-template<class node_data_t, class edge_data_t>
-bool HalfEdgeGraph<node_data_t, edge_data_t>::bedugCheckDataCompleteness() const
+template<typename edge_t, typename node_t, typename edge_t_enabled, typename node_t_enabled>
+bool HalfEdgeGraph<edge_t, node_t, edge_t_enabled, node_t_enabled>::bedugCheckDataCompleteness() const
 {
     size_t problems = 0;
     for (const node_t& node : nodes)

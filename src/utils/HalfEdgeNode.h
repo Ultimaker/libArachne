@@ -11,21 +11,23 @@
 namespace arachne
 {
 
-template<typename node_data_t, typename edge_data_t>
+template<
+typename edge_t,
+typename node_t
+>
 class HalfEdge;
 
-template<typename node_data_t, typename edge_data_t>
+template<
+typename edge_t,
+typename node_t
+>
 class HalfEdgeNode
 {
-    using edge_t = HalfEdge<node_data_t, edge_data_t>;
-    using node_t = HalfEdgeNode<node_data_t, edge_data_t>;
 public:
-    node_data_t data;
     Point p;
     edge_t* some_edge = nullptr;
-    HalfEdgeNode(node_data_t data, Point p)
-    : data(data)
-    , p(p)
+    HalfEdgeNode(Point p)
+    : p(p)
     {}
     bool operator==(const HalfEdgeNode& other)
     {
