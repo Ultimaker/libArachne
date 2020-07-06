@@ -10,3 +10,6 @@ Volume 128,
 102907,
 ISSN 0010-4485,
 https://doi.org/10.1016/j.cad.2020.102907.
+
+
+See also https://github.com/BagelOrb/ToolpathVisualizer for a better visualization and conversion to gcode from the output of this program.
